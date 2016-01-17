@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_BATTLESCAPEBUTTON_H
-#define OPENXCOM_BATTLESCAPEBUTTON_H
-
 #include "../Engine/InteractiveSurface.h"
 
 namespace OpenXcom
@@ -38,7 +36,7 @@ class BattlescapeButton : public InteractiveSurface
 protected:
 	Uint8 _color;
 	BattlescapeButton **_group;
-	bool _inverted, _tftdMode;
+	bool _inverted;
 	InversionType _toggleMode;
 	Surface *_altSurface;
 public:
@@ -62,8 +60,6 @@ public:
 	void allowToggleInversion();
 	/// Allows this button to be toggled on when clicked, and off when released.
 	void allowClickInversion();
-	/// Sets this button to use a colour lookup table instead of inversion for its alternate form.
-	void setTftdMode(bool mode);
 	/// Sets up the "pressed" surface.
 	void initSurfaces();
 	/// Blits this surface onto another one.
@@ -76,5 +72,3 @@ public:
 };
 
 }
-
-#endif

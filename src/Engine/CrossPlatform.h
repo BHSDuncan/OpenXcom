@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_CROSSPLATFORM_H
-#define OPENXCOM_CROSSPLATFORM_H
-
 #include <SDL.h>
 #include <string>
 #include <vector>
@@ -33,6 +31,8 @@ namespace OpenXcom
  */
 namespace CrossPlatform
 {
+	/// Gets the available error dialog.
+	void getErrorDialog();
 	/// Displays an error message.
 	void showError(const std::string &error);
 	/// Finds the game's data folders in the system.
@@ -41,26 +41,28 @@ namespace CrossPlatform
 	std::vector<std::string> findUserFolders();
 	/// Finds the game's config folder in the system.
 	std::string findConfigFolder();
-	/// Gets the path for a data file.
-	std::string getDataFile(const std::string &filename);
-    /// Gets the path for a data folder
-	std::string getDataFolder(const std::string &foldername);
+	/// Searches the data folders and returns the full path for a data file
+	/// when given a relative path, like "units/zombie.pck".  returns the passed-in
+	/// filename if the file is not found
+	std::string searchDataFile(const std::string &filename);
+	/// Searches the data folders and returns the full path for a folder
+	/// when given a relative path, like "common".  returns the passed-in
+	/// dir name if the folder is not found
+	std::string searchDataFolder(const std::string &foldername);
 	/// Creates a folder.
 	bool createFolder(const std::string &path);
 	/// Terminates a path.
 	std::string endPath(const std::string &path);
 	/// Returns the list of files in a folder.
 	std::vector<std::string> getFolderContents(const std::string &path, const std::string &ext = "");
-	/// Returns the list of files in a data folder.
-	std::vector<std::string> getDataContents(const std::string &path, const std::string &ext = "");
 	/// Checks if the path is an existing folder.
 	bool folderExists(const std::string &path);
 	/// Checks if the path is an existing file.
 	bool fileExists(const std::string &path);
 	/// Deletes the specified file.
 	bool deleteFile(const std::string &path);
-	/// Gets the basename of a file.
-	std::string baseFilename(const std::string &path, int(*transform)(int) = 0);
+	/// Gets the pathless filename of a file.
+	std::string baseFilename(const std::string &path);
 	/// Sanitizes the characters in a filename.
 	std::string sanitizeFilename(const std::string &filename);
 	/// Removes the extension from a file.
@@ -83,8 +85,10 @@ namespace CrossPlatform
 	std::string getDosPath();
 	/// Sets the window icon.
 	void setWindowIcon(int winResource, const std::string &unixPath);
+	/// Produces a stack trace.
+	void stackTrace(void *ctx);
+	/// Produces a crash dump.
+	void crashDump(void *ex, const std::string &err);
 }
 
 }
-
-#endif

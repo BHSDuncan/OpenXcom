@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_LOCALIZEDTEXT_H
-#define OPENXCOM_LOCALIZEDTEXT_H
-
 #include <string>
 #include <sstream>
 
@@ -59,11 +57,10 @@ public:
 	// Argument substitution.
 	/// Replace next argument.
 	LocalizedText arg(const std::wstring &) const OX_REQUIRED_RESULT;
-	/// Replace next argument.
 	LocalizedText &arg(const std::wstring &) OX_REQUIRED_RESULT;
-	/// Replace next argument.
+	LocalizedText arg(const std::string &) const OX_REQUIRED_RESULT;
+	LocalizedText &arg(const std::string &) OX_REQUIRED_RESULT;
 	template <typename T> LocalizedText arg(T) const OX_REQUIRED_RESULT;
-	/// Replace next argument.
 	template <typename T> LocalizedText &arg(T) OX_REQUIRED_RESULT;
 private:
 	std::wstring _text; ///< The actual localized text.
@@ -102,7 +99,7 @@ inline LocalizedText::operator std::wstring const&() const
  * Replace the next argument placeholder with @a val.
  * @tparam T The type of the replacement value. It should be streamable to std::owstringstream.
  * @param val The value to place in the next placeholder's position.
- * @return A translated string with all occurences of the marker replaced by @a val.
+ * @return A translated string with all occurrences of the marker replaced by @a val.
  */
 template <typename T>
 LocalizedText LocalizedText::arg(T val) const
@@ -128,7 +125,7 @@ LocalizedText LocalizedText::arg(T val) const
  * Replace the next argument placeholder with @a val.
  * @tparam T The type of the replacement value. It should be streamable to std::owstringstream.
  * @param val The value to place in the next placeholder's position.
- * @return The translated string with all occurences of the marker replaced by @a val.
+ * @return The translated string with all occurrences of the marker replaced by @a val.
  */
 template <typename T>
 LocalizedText &LocalizedText::arg(T val)
@@ -158,5 +155,3 @@ inline std::wostream &operator<<(std::wostream &os, const LocalizedText &txt)
 	return os;
 }
 }
-
-#endif

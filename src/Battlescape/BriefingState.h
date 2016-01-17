@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_BRIEFINGSTATE_H
-#define OPENXCOM_BRIEFINGSTATE_H
-
 #include "../Engine/State.h"
 
 namespace OpenXcom
@@ -40,15 +38,16 @@ private:
 	TextButton *_btnOk;
 	Window *_window;
 	Text *_txtTitle, *_txtTarget, *_txtCraft, *_txtBriefing;
+	std::string _cutsceneId, _musicId;
 public:
 	/// Creates the Briefing state.
 	BriefingState(Craft *craft = 0, Base *base = 0);
 	/// Cleans up the Briefing state.
 	~BriefingState();
+	/// Initialization
+	void init();
 	/// Handler for clicking the Ok button.
 	void btnOkClick(Action *action);
 };
 
 }
-
-#endif

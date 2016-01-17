@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_RESEARCHINFOSTATE
-#define OPENXCOM_RESEARCHINFOSTATE
-
 #include "../Engine/State.h"
 
 namespace OpenXcom
@@ -56,6 +54,8 @@ public:
 	/// Creates the ResearchProject state.
 	ResearchInfoState(Base *base, RuleResearch * rule);
 	ResearchInfoState(Base *base, ResearchProject * project);
+	/// Cleans up the ResearchInfo state
+	~ResearchInfoState();
 	/// Handler for clicking the OK button.
 	void btnOkClick(Action *action);
 	/// Handler for clicking the Cancel button.
@@ -85,6 +85,5 @@ public:
 	/// Runs state functionality every cycle(used to update the timer).
 	void think();
 };
-}
 
-#endif
+}

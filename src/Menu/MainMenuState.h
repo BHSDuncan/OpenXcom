@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_MAINMENUSTATE_H
-#define OPENXCOM_MAINMENUSTATE_H
-
 #include "../Engine/State.h"
 
 namespace OpenXcom
@@ -27,6 +25,13 @@ namespace OpenXcom
 class TextButton;
 class Window;
 class Text;
+
+// Utility class for enqueuing a state in the stack that goes to the main menu
+class GoToMainMenuState : public State
+{
+public:
+	void init();
+};
 
 /**
  * Main Menu window displayed when first
@@ -58,5 +63,3 @@ public:
 };
 
 }
-
-#endif

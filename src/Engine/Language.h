@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,13 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_LANGUAGE_H
-#define OPENXCOM_LANGUAGE_H
-
 #include <map>
 #include <vector>
 #include <string>
-#include <yaml-cpp/yaml.h>
 #include "LocalizedText.h"
 #include "../Savegame/Soldier.h"
 
@@ -77,7 +74,9 @@ public:
 	/// Gets list of languages in the data directory.
 	static void getList(std::vector<std::string> &files, std::vector<std::wstring> &names);
 	/// Loads the language from a YAML file.
-	void load(const std::string &filename, ExtraStrings *extras);
+	void load(const std::string &filename);
+	/// Loads the language from a ruleset file.
+	void load(ExtraStrings *strings);
 	/// Gets the language's ID.
 	std::string getId() const;
 	/// Gets the language's name.
@@ -97,5 +96,3 @@ public:
 };
 
 }
-
-#endif

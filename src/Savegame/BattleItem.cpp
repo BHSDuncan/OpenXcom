@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -19,8 +19,8 @@
 #include "BattleItem.h"
 #include "BattleUnit.h"
 #include "Tile.h"
-#include "../Ruleset/RuleItem.h"
-#include "../Ruleset/RuleInventory.h"
+#include "../Mod/RuleItem.h"
+#include "../Mod/RuleInventory.h"
 
 namespace OpenXcom
 {
@@ -30,24 +30,24 @@ namespace OpenXcom
  * @param rules Pointer to ruleset.
  * @param id The id of the item.
  */
-BattleItem::BattleItem(RuleItem *rules, int *id) : _id(*id), _rules(rules), _owner(0), _previousOwner(0), _unit(0), _tile(0), _inventorySlot(0), _inventoryX(0), _inventoryY(0), _ammoItem(0), _fuseTimer(-1), _ammoQuantity(0), _painKiller(0), _heal(0), _stimulant(0), _XCOMProperty(false), _droppedOnAlienTurn(false)
+BattleItem::BattleItem(RuleItem *rules, int *id) : _id(*id), _rules(rules), _owner(0), _previousOwner(0), _unit(0), _tile(0), _inventorySlot(0), _inventoryX(0), _inventoryY(0), _ammoItem(0), _fuseTimer(-1), _ammoQuantity(0), _painKiller(0), _heal(0), _stimulant(0), _XCOMProperty(false), _droppedOnAlienTurn(false), _isAmmo(false)
 {
-	if (_rules && _rules->getBattleType() == BT_AMMO)
-	{
-		setAmmoQuantity(_rules->getClipSize());
-	} else if (_rules && _rules->getBattleType() == BT_MEDIKIT)
-	{
-		setHealQuantity (_rules->getHealQuantity());
-		setPainKillerQuantity (_rules->getPainKillerQuantity());
-		setStimulantQuantity (_rules->getStimulantQuantity());
-	}
 	(*id)++;
-
-	// weapon does not need ammo, ammo item points to weapon
-	if (_rules && (_rules->getBattleType() == BT_FIREARM || _rules->getBattleType() == BT_MELEE) && _rules->getCompatibleAmmo()->empty())
+	if (_rules)
 	{
 		setAmmoQuantity(_rules->getClipSize());
-		_ammoItem = this;
+		if (_rules->getBattleType() == BT_MEDIKIT)
+		{
+			setHealQuantity (_rules->getHealQuantity());
+			setPainKillerQuantity (_rules->getPainKillerQuantity());
+			setStimulantQuantity (_rules->getStimulantQuantity());
+		}
+
+		// weapon does not need ammo, ammo item points to weapon
+		else if ((_rules->getBattleType() == BT_FIREARM || _rules->getBattleType() == BT_MELEE) && _rules->getCompatibleAmmo()->empty())
+		{
+			_ammoItem = this;
+		}
 	}
 }
 
@@ -377,6 +377,10 @@ int BattleItem::setAmmoItem(BattleItem *item)
 
 	if (item == 0)
 	{
+		if (_ammoItem)
+		{
+			_ammoItem->setIsAmmo(false);
+		}
 		_ammoItem = 0;
 		return 0;
 	}
@@ -389,6 +393,7 @@ int BattleItem::setAmmoItem(BattleItem *item)
 		if (*i == item->getRules()->getType())
 		{
 			_ammoItem = item;
+			item->setIsAmmo(true);
 			return 0;
 		}
 	}
@@ -503,6 +508,7 @@ void BattleItem::setXCOMProperty (bool flag)
 {
 	_XCOMProperty = flag;
 }
+
 /**
  * Gets the XCom property flag. This is to determine at debriefing what goes into the base/craft.
  * @return True if it's XCom property.
@@ -544,4 +550,21 @@ void BattleItem::convertToCorpse(RuleItem *rules)
 	}
 }
 
+/**
+ * Sets the flag on this item indicating whether or not it is a clip used in a weapon.
+ * @param ammo set the ammo flag to this.
+ */
+void BattleItem::setIsAmmo(bool ammo)
+{
+	_isAmmo = ammo;
+}
+
+/**
+ * Checks if this item is loaded into a weapon.
+ * @return if this is loaded into a weapon or not.
+ */
+bool BattleItem::isAmmo()
+{
+	return _isAmmo;
+}
 }

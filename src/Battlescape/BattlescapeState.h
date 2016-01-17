@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http:///www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_BATTLESCAPESTATE_H
-#define OPENXCOM_BATTLESCAPESTATE_H
-
 #include "../Engine/State.h"
 #include "Position.h"
 
@@ -81,10 +79,15 @@ private:
 	bool _mouseOverIcons;
 	std::string _currentTooltip;
 	Position _cursorPosition;
+	Uint8 _barHealthColor;
 	/// Popups a context sensitive list of actions the user can choose from.
 	void handleItemClick(BattleItem *item);
 	/// Shifts the red colors of the visible unit buttons backgrounds.
 	void blinkVisibleUnitButtons();
+	/// Shifts the colors of the health bar when unit has fatal wounds.
+	void blinkHealthBar();
+	/// Shows the unit kneel state.
+	void toggleKneelButton(BattleUnit* unit);
 public:
 	/// Selects the next soldier.
 	void selectNextPlayerUnit(bool checkReselect = false, bool setReselect = false, bool checkInventory = false);
@@ -95,7 +98,7 @@ public:
 	BattlescapeState();
 	/// Cleans up the Battlescape state.
 	~BattlescapeState();
-	/// Initilizes the battlescapestate.
+	/// Initializes the battlescapestate.
 	void init();
 	/// Runs the timers and handles popups.
 	void think();
@@ -216,5 +219,3 @@ public:
 };
 
 }
-
-#endif

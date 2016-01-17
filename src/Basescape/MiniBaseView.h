@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_MINIBASEVIEW_H
-#define OPENXCOM_MINIBASEVIEW_H
-
 #include <vector>
 #include "../Engine/InteractiveSurface.h"
 
@@ -41,6 +39,7 @@ private:
 	std::vector<Base*> *_bases;
 	SurfaceSet *_texture;
 	size_t _base, _hoverBase;
+	Uint8 _red, _green;
 public:
 	static const size_t MAX_BASES = 8;
 	/// Creates a new mini base view at the specified position and size.
@@ -59,8 +58,8 @@ public:
 	void draw();
 	/// Special handling for mouse hovers.
 	void mouseOver(Action *action, State *state);
+	void setColor(Uint8 color);
+	void setSecondaryColor(Uint8 color);
 };
 
 }
-
-#endif

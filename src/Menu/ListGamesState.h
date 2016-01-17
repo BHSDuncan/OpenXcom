@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_LISTGAMESSTATE_H
-#define OPENXCOM_LISTGAMESSTATE_H
-
 #include "../Engine/State.h"
 #include "OptionsBaseState.h"
 #include <vector>
@@ -48,7 +46,6 @@ protected:
 	TextList *_lstSaves;
 	ArrowButton *_sortName, *_sortDate;
 	OptionsOrigin _origin;
-	bool _showMsg, _noUI;
 	std::vector<SaveInfo> _saves;
 	unsigned int _firstValidRow;
 	bool _autoquick, _sortable;
@@ -82,5 +79,3 @@ public:
 };
 
 }
-
-#endif

@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,11 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_ALIENBAISTATE_H
-#define OPENXCOM_ALIENBAISTATE_H
-
 #include "BattleAIState.h"
-#include "../Battlescape/BattlescapeGame.h"
+#include "BattlescapeGame.h"
 #include "Position.h"
 #include <vector>
 
@@ -93,6 +91,7 @@ public:
 	bool findFirePoint();
 	/// Decides if we should throw a grenade/launch a missile to this position.
 	bool explosiveEfficacy(Position targetPos, BattleUnit *attackingUnit, int radius, int diff, bool grenade = false) const;
+	bool getNodeOfBestEfficacy(BattleAction *action);
 	/// Attempts to take a melee attack/charge an enemy we can see.
 	void meleeAction();
 	/// Attempts to fire a waypoint projectile at an enemy we, or one of our teammates sees.
@@ -113,8 +112,7 @@ public:
 	BattleActionType getReserveMode();
 	/// Assuming we have both a ranged and a melee weapon, we have to select one.
 	void selectMeleeOrRanged();
+	BattleUnit* getTarget();
 };
 
 }
-
-#endif

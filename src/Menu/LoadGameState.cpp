@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -21,17 +21,18 @@
 #include "../Engine/Logger.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Engine/Game.h"
-#include "../Engine/Action.h"
 #include "../Engine/Exception.h"
 #include "../Engine/Options.h"
 #include "../Engine/CrossPlatform.h"
 #include "../Engine/Screen.h"
 #include "../Engine/Language.h"
-#include "../Engine/Palette.h"
 #include "../Interface/Text.h"
 #include "../Geoscape/GeoscapeState.h"
 #include "ErrorMessageState.h"
 #include "../Battlescape/BattlescapeState.h"
+#include "../Mod/Mod.h"
+#include "../Engine/Sound.h"
+#include "../Mod/RuleInterface.h"
 
 namespace OpenXcom
 {
@@ -98,21 +99,27 @@ void LoadGameState::buildUi(SDL_Color *palette)
 	// Set palette
 	setPalette(palette);
 
-	add(_txtStatus);
+	if (_origin == OPT_BATTLESCAPE)
+	{
+		add(_txtStatus, "textLoad", "battlescape");
+		_txtStatus->setHighContrast(true);
+		if (_game->getSavedGame()->getSavedBattle()->getAmbientSound() != -1)
+		{
+			_game->getMod()->getSoundByDepth(0, _game->getSavedGame()->getSavedBattle()->getAmbientSound())->stopLoop();
+		}
+	}
+	else
+	{
+		add(_txtStatus, "textLoad", "geoscape");
+	}
 
 	centerAllSurfaces();
 
 	// Set up objects
-	_txtStatus->setColor(Palette::blockOffset(8)+5);
 	_txtStatus->setBig();
 	_txtStatus->setAlign(ALIGN_CENTER);
 	_txtStatus->setText(tr("STR_LOADING_GAME"));
 
-	if (_origin == OPT_BATTLESCAPE)
-	{
-		_txtStatus->setColor(Palette::blockOffset(1)-1);
-		_txtStatus->setHighContrast(true);
-	}
 }
 
 /**
@@ -121,7 +128,7 @@ void LoadGameState::buildUi(SDL_Color *palette)
 void LoadGameState::init()
 {
 	State::init();
-	if (_filename == SavedGame::QUICKSAVE && !CrossPlatform::fileExists(Options::getUserFolder() + _filename))
+	if (_filename == SavedGame::QUICKSAVE && !CrossPlatform::fileExists(Options::getMasterUserFolder() + _filename))
 	{
 		_game->popState();
 		return;
@@ -147,7 +154,7 @@ void LoadGameState::think()
 		SavedGame *s = new SavedGame();
 		try
 		{
-			s->load(_filename, _game->getRuleset());
+			s->load(_filename, _game->getMod());
 			_game->setSavedGame(s);
 			Options::baseXResolution = Options::baseXGeoscape;
 			Options::baseYResolution = Options::baseYGeoscape;
@@ -155,7 +162,7 @@ void LoadGameState::think()
 			_game->setState(new GeoscapeState);
 			if (_game->getSavedGame()->getSavedBattle() != 0)
 			{
-				_game->getSavedGame()->getSavedBattle()->loadMapResources(_game);
+				_game->getSavedGame()->getSavedBattle()->loadMapResources(_game->getMod());
 				Options::baseXResolution = Options::baseXBattlescape;
 				Options::baseYResolution = Options::baseYBattlescape;
 				_game->getScreen()->resetDisplay(false);
@@ -170,9 +177,9 @@ void LoadGameState::think()
 			std::wostringstream error;
 			error << tr("STR_LOAD_UNSUCCESSFUL") << L'\x02' << Language::fsToWstr(e.what());
 			if (_origin != OPT_BATTLESCAPE)
-				_game->pushState(new ErrorMessageState(error.str(), _palette, Palette::blockOffset(8) + 10, "BACK01.SCR", 6));
+				_game->pushState(new ErrorMessageState(error.str(), _palette, _game->getMod()->getInterface("errorMessages")->getElement("geoscapeColor")->color, "BACK01.SCR", _game->getMod()->getInterface("errorMessages")->getElement("geoscapePalette")->color));
 			else
-				_game->pushState(new ErrorMessageState(error.str(), _palette, Palette::blockOffset(0), "TAC00.SCR", -1));
+				_game->pushState(new ErrorMessageState(error.str(), _palette, _game->getMod()->getInterface("errorMessages")->getElement("battlescapeColor")->color, "TAC00.SCR", _game->getMod()->getInterface("errorMessages")->getElement("battlescapePalette")->color));
 
 			if (_game->getSavedGame() == s)
 				_game->setSavedGame(0);
@@ -185,9 +192,9 @@ void LoadGameState::think()
 			std::wostringstream error;
 			error << tr("STR_LOAD_UNSUCCESSFUL") << L'\x02' << Language::fsToWstr(e.what());
 			if (_origin != OPT_BATTLESCAPE)
-				_game->pushState(new ErrorMessageState(error.str(), _palette, Palette::blockOffset(8) + 10, "BACK01.SCR", 6));
+				_game->pushState(new ErrorMessageState(error.str(), _palette, _game->getMod()->getInterface("errorMessages")->getElement("geoscapeColor")->color, "BACK01.SCR", _game->getMod()->getInterface("errorMessages")->getElement("geoscapePalette")->color));
 			else
-				_game->pushState(new ErrorMessageState(error.str(), _palette, Palette::blockOffset(0), "TAC00.SCR", -1));
+				_game->pushState(new ErrorMessageState(error.str(), _palette, _game->getMod()->getInterface("errorMessages")->getElement("battlescapeColor")->color, "TAC00.SCR", _game->getMod()->getInterface("errorMessages")->getElement("battlescapePalette")->color));
 
 			if (_game->getSavedGame() == s)
 				_game->setSavedGame(0);

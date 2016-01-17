@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_ITEMCONTAINER_H
-#define OPENXCOM_ITEMCONTAINER_H
-
 #include <string>
 #include <map>
 #include <yaml-cpp/yaml.h>
@@ -26,7 +24,7 @@
 namespace OpenXcom
 {
 
-class Ruleset;
+class Mod;
 
 /**
  * Represents the items contained by a certain entity,
@@ -55,11 +53,9 @@ public:
 	/// Gets the total quantity of items in the container.
 	int getTotalQuantity() const;
 	/// Gets the total size of items in the container.
-	double getTotalSize(const Ruleset *rule) const;
+	double getTotalSize(const Mod *mod) const;
 	/// Gets all the items in the container.
 	std::map<std::string, int> *getContents();
 };
 
 }
-
-#endif

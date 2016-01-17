@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -210,7 +210,7 @@ void SoundSet::loadCatbyIndex(const std::string &filename, int index)
 	}
 	if (index >= sndFile.getAmount())
 	{
-		std::stringstream err;
+		std::ostringstream err;
 		err << filename << " does not contain " << index << " sound files.";
 		throw Exception(err.str());
 	}

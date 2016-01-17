@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_ABORTMISSION_H
-#define OPENXCOM_ABORTMISSION_H
-
 #include "../Engine/State.h"
 
 namespace OpenXcom
@@ -37,11 +35,11 @@ class AbortMissionState : public State
 {
 private:
 	Window *_window;
-	Text *_txtInExit, *_txtOutsideExit, *_txtAbort;
+	Text *_txtInEntrance, *_txtInExit, *_txtOutside, *_txtAbort;
 	TextButton *_btnOk, *_btnCancel;
 	SavedBattleGame *_battleGame;
 	BattlescapeState *_state;
-	int _inExitArea, _outExitArea;
+	int _inEntrance, _inExit, _outside;
 public:
 	/// Creates the Abort Mission state.
 	AbortMissionState(SavedBattleGame *battleGame, BattlescapeState *state);
@@ -55,5 +53,3 @@ public:
 };
 
 }
-
-#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,12 +17,10 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "OptionsAdvancedState.h"
-#include <iostream>
 #include <sstream>
 #include "../Engine/Game.h"
-#include "../Resource/ResourcePack.h"
-#include "../Engine/Language.h"
-#include "../Engine/Palette.h"
+#include "../Mod/Mod.h"
+#include "../Engine/LocalizedText.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
 #include "../Interface/TextList.h"
@@ -45,13 +43,19 @@ OptionsAdvancedState::OptionsAdvancedState(OptionsOrigin origin) : OptionsBaseSt
 	// Create objects
 	_lstOptions = new TextList(200, 136, 94, 8);
 	
-	add(_lstOptions);
-
+	if (origin != OPT_BATTLESCAPE)
+	{
+		add(_lstOptions, "optionLists", "advancedMenu");
+	}
+	else
+	{
+		add(_lstOptions, "optionLists", "battlescape");
+	}
 	centerAllSurfaces();
 
 	// how much room do we need for YES/NO
 	Text text = Text(100, 9, 0, 0);
-	text.initText(_game->getResourcePack()->getFont("FONT_BIG"), _game->getResourcePack()->getFont("FONT_SMALL"), _game->getLanguage());
+	text.initText(_game->getMod()->getFont("FONT_BIG"), _game->getMod()->getFont("FONT_SMALL"), _game->getLanguage());
 	text.setText(tr("STR_YES"));
 	int yes = text.getTextWidth();
 	text.setText(tr("STR_NO"));
@@ -63,8 +67,6 @@ OptionsAdvancedState::OptionsAdvancedState(OptionsOrigin origin) : OptionsBaseSt
 	// Set up objects
 	_lstOptions->setAlign(ALIGN_RIGHT, 1);
 	_lstOptions->setColumns(2, leftcol, rightcol);
-	_lstOptions->setColor(Palette::blockOffset(8)+10);
-	_lstOptions->setArrowColor(Palette::blockOffset(8)+5);
 	_lstOptions->setWordWrap(true);
 	_lstOptions->setSelectable(true);
 	_lstOptions->setBackground(_window);
@@ -72,14 +74,7 @@ OptionsAdvancedState::OptionsAdvancedState(OptionsOrigin origin) : OptionsBaseSt
 	_lstOptions->onMouseOver((ActionHandler)&OptionsAdvancedState::lstOptionsMouseOver);
 	_lstOptions->onMouseOut((ActionHandler)&OptionsAdvancedState::lstOptionsMouseOut);
 
-	if (origin != OPT_BATTLESCAPE)
-	{
-		_colorGroup = Palette::blockOffset(15) - 1;
-	}
-	else
-	{
-		_colorGroup = Palette::blockOffset(1) - 1;
-	}
+	_colorGroup = _lstOptions->getSecondaryColor();
 
 	const std::vector<OptionInfo> &options = Options::getOptionInfo();
 	for (std::vector<OptionInfo>::const_iterator i = options.begin(); i != options.end(); ++i)
@@ -259,7 +254,7 @@ void OptionsAdvancedState::lstOptionsClick(Action *action)
 		ss << *i;
 		settingText = ss.str();
 	}
-	_lstOptions->setCellText(sel, 1, settingText.c_str());
+	_lstOptions->setCellText(sel, 1, settingText);
 }
 
 void OptionsAdvancedState::lstOptionsMouseOver(Action *)
@@ -271,7 +266,7 @@ void OptionsAdvancedState::lstOptionsMouseOver(Action *)
 	{
 		desc = tr(setting->description() + "_DESC");
 	}
-	_txtTooltip->setText(desc.c_str());
+	_txtTooltip->setText(desc);
 }
 
 void OptionsAdvancedState::lstOptionsMouseOut(Action *)

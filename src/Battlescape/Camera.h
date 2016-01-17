@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_CAMERA_H
-#define OPENXCOM_CAMERA_H
-
 #include "Position.h"
 
 namespace OpenXcom
@@ -104,11 +102,11 @@ public:
 	/// Checks if the camera is showing all map layers.
 	bool getShowAllLayers() const;
 	/// Checks if map coordinates X,Y,Z are on screen.
-	bool isOnScreen(const Position &mapPos, const bool unitWalking) const;
+	bool isOnScreen(const Position &mapPos, const bool unitWalking, const int unitSize, const bool boundary) const;
 	/// Resize the viewable area.
 	void resize();
 	/// stop mouse scrolling.
 	void stopMouseScrolling();
 };
+
 }
-#endif

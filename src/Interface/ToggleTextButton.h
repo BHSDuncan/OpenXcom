@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,11 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#ifndef __OXC_TOGGLETEXTBUTTON_H
-#define __OXC_TOGGLETEXTBUTTON_H
-
-
 #include "TextButton.h"
 #include "../Engine/Action.h"
 #include "../Engine/State.h"
@@ -33,7 +29,7 @@ class ToggleTextButton :
 {
 private:
     bool _isPressed;
-    int _invertMid;
+    int _originalColor, _invertedColor;
     TextButton *_fakeGroup;
 
 public:
@@ -42,11 +38,10 @@ public:
     void mousePress(Action *action, State *state);
     void setPressed(bool pressed);
     bool getPressed() const { return _isPressed; }
-    void setInvertColor(Uint8 mid);
+	void setColor(Uint8 color);
+    void setInvertColor(Uint8 color);
     ToggleTextButton(int width, int height, int x, int y);
     ~ToggleTextButton(void);
 };
 
 }
-
-#endif

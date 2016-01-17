@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,10 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_PARTICLE_H
-#define OPENXCOM_PARTICLE_H
-
 #include <SDL_types.h>
+#include <algorithm>
 
 namespace OpenXcom
 {
@@ -41,7 +40,7 @@ public:
 	/// Get the color.
 	Uint8 getColor() { return _color; }
 	/// Get the opacity.
-	Uint8 getOpacity() {return _opacity / 5; }
+	Uint8 getOpacity() {return std::min((_opacity + 7) / 10, 3); }
 	/// Get the horizontal shift.
 	float getX() { return _xOffset; }
 	/// Get the vertical shift.
@@ -49,5 +48,3 @@ public:
 };
 
 }
-
-#endif

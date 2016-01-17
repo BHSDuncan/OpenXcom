@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,7 +20,7 @@
 #include "../fmath.h"
 #include <algorithm>
 #include "../Engine/Action.h"
-#include "../Interface/TextList.h"
+#include "TextList.h"
 #include "../Engine/Palette.h"
 
 namespace OpenXcom

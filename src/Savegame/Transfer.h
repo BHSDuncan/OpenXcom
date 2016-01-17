@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,22 +17,29 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_TRANSFER_H
-#define OPENXCOM_TRANSFER_H
-
 #include <string>
 #include <yaml-cpp/yaml.h>
 
 namespace OpenXcom
 {
 
-enum TransferType { TRANSFER_SOLDIER, TRANSFER_CRAFT, TRANSFER_ITEM, TRANSFER_SCIENTIST, TRANSFER_ENGINEER };
+enum TransferType { TRANSFER_ITEM, TRANSFER_CRAFT, TRANSFER_SOLDIER, TRANSFER_SCIENTIST, TRANSFER_ENGINEER };
+
+struct TransferRow
+{
+	TransferType type;
+	void *rule;
+	std::wstring name;
+	int cost;
+	int qtySrc, qtyDst;
+	int amount;
+};
 
 class Soldier;
 class Craft;
 class Language;
 class Base;
-class Ruleset;
+class Mod;
 class SavedGame;
 
 /**
@@ -54,7 +62,7 @@ public:
 	/// Cleans up the transfer.
 	~Transfer();
 	/// Loads the transfer from YAML.
-	bool load(const YAML::Node& node, Base *base, const Ruleset *rule, SavedGame *save);
+	bool load(const YAML::Node& node, Base *base, const Mod *mod, SavedGame *save);
 	/// Saves the transfer to YAML.
 	YAML::Node save() const;
 	/// Sets the soldier of the transfer.
@@ -87,5 +95,3 @@ public:
 };
 
 }
-
-#endif

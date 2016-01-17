@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -19,9 +19,7 @@
 #include "Font.h"
 #include "DosFont.h"
 #include "Surface.h"
-#include "Language.h"
-#include "CrossPlatform.h"
-#include "Logger.h"
+#include "FileMap.h"
 
 namespace OpenXcom
 {
@@ -29,11 +27,11 @@ namespace OpenXcom
 std::wstring Font::_index;
 
 SDL_Color Font::_palette[] = {{0, 0, 0, 0},
-							  {255, 255, 255, 255},
-							  {207, 207, 207, 255},
-							  {159, 159, 159, 255},
-							  {111, 111, 111, 255},
-							  {63, 63, 63, 255}};
+			      {255, 255, 255, 255},
+			      {207, 207, 207, 255},
+			      {159, 159, 159, 255},
+			      {111, 111, 111, 255},
+			      {63, 63, 63, 255}};
 
 /**
  * Initializes the font with a blank surface.
@@ -51,19 +49,19 @@ Font::~Font()
 }
 
 /**
-* Loads the characters contained in each font
-* from a UTF-8 string to use as the index.
-* @param index String of characters.
-*/
+ * Loads the characters contained in each font
+ * from a UTF-8 string to use as the index.
+ * @param index String of characters.
+ */
 void Font::setIndex(const std::wstring &index)
 {
 	_index = index;
 }
 
 /**
-* Loads the font from a YAML file.
-* @param node YAML node.
-*/
+ * Loads the font from a YAML file.
+ * @param node YAML node.
+ */
 void Font::load(const YAML::Node &node)
 {
 	_width = node["width"].as<int>(_width);
@@ -73,7 +71,7 @@ void Font::load(const YAML::Node &node)
 	std::string image = "Language/" + node["image"].as<std::string>();
 
 	Surface *fontTemp = new Surface(_width, _height);
-	fontTemp->loadImage(CrossPlatform::getDataFile(image));
+	fontTemp->loadImage(FileMap::getFilePath(image));
 	_surface = new Surface(fontTemp->getWidth(), fontTemp->getHeight());
 	_surface->setPalette(_palette, 0, 6);
 	fontTemp->blit(_surface);
@@ -189,6 +187,7 @@ Surface *Font::getChar(wchar_t c)
 	_surface->getCrop()->h = _chars[c].h;
 	return _surface;
 }
+
 /**
  * Returns the maximum width for any character in the font.
  * @return Width in pixels.

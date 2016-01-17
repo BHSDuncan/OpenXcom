@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,28 +17,21 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "BaseDefenseState.h"
-#include <sstream>
 #include "../Engine/Game.h"
-#include "../Resource/ResourcePack.h"
-#include "../Engine/Language.h"
-#include "../Engine/Palette.h"
+#include "../Mod/Mod.h"
+#include "../Engine/LocalizedText.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/Window.h"
 #include "../Interface/Text.h"
-#include "../Savegame/SavedGame.h"
 #include "../Savegame/Base.h"
 #include "../Savegame/BaseFacility.h"
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/RuleBaseFacility.h"
+#include "../Mod/RuleBaseFacility.h"
 #include "../Savegame/Ufo.h"
 #include "../Interface/TextList.h"
 #include "GeoscapeState.h"
 #include "../Engine/Action.h"
 #include "../Engine/RNG.h"
-#include "../Battlescape/BriefingState.h"
-#include "../Battlescape/BattlescapeGenerator.h"
 #include "../Engine/Sound.h"
-#include "BaseDestroyedState.h"
 #include "../Engine/Timer.h"
 #include "../Engine/Options.h"
 
@@ -69,36 +62,31 @@ BaseDefenseState::BaseDefenseState(Base *base, Ufo *ufo, GeoscapeState *state) :
 	_btnOk = new TextButton(120, 18, 100, 170);
 
 	// Set palette
-	setPalette("PAL_BASESCAPE", 2);
+	setInterface("baseDefense");
 
-	add(_window);
-	add(_btnOk);
-	add(_txtTitle);
-	add(_txtInit);
-	add(_lstDefenses);
+	add(_window, "window", "baseDefense");
+	add(_btnOk, "button", "baseDefense");
+	add(_txtTitle, "text", "baseDefense");
+	add(_txtInit, "text", "baseDefense");
+	add(_lstDefenses, "text", "baseDefense");
 
 	centerAllSurfaces();
 
 	// Set up objects
-	_window->setColor(Palette::blockOffset(15)+6);
-	_window->setBackground(_game->getResourcePack()->getSurface("BACK04.SCR"));
+	_window->setBackground(_game->getMod()->getSurface("BACK04.SCR"));
 
-	_btnOk->setColor(Palette::blockOffset(13)+10);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&BaseDefenseState::btnOkClick);
 	_btnOk->onKeyboardPress((ActionHandler)&BaseDefenseState::btnOkClick, Options::keyOk);
 	_btnOk->onKeyboardPress((ActionHandler)&BaseDefenseState::btnOkClick, Options::keyCancel);
 	_btnOk->setVisible(false);
 
-	_txtTitle->setColor(Palette::blockOffset(13)+10);
 	_txtTitle->setBig();
 	_txtTitle->setText(tr("STR_BASE_UNDER_ATTACK").arg(_base->getName()));
 	_txtInit->setVisible(false);
 
-	_txtInit->setColor(Palette::blockOffset(13)+10);
 	_txtInit->setText(tr("STR_BASE_DEFENSES_INITIATED"));
 
-	_lstDefenses->setColor(Palette::blockOffset(13)+10);
 	_lstDefenses->setColumns(3, 134, 70, 50);
 	_gravShields = _base->getGravShields();
 	_defenses = _base->getDefenses()->size();
@@ -108,6 +96,7 @@ BaseDefenseState::BaseDefenseState(Base *base, Ufo *ufo, GeoscapeState *state) :
 
 	_explosionCount = 0;
 }
+
 /**
  *
  */
@@ -125,7 +114,7 @@ void BaseDefenseState::nextStep()
 {
 	if (_thinkcycles == -1)
 		return;
-	
+
 	++_thinkcycles;
 
 	if (_thinkcycles == 1)
@@ -148,7 +137,7 @@ void BaseDefenseState::nextStep()
 					_lstDefenses->scrollDown(true);
 				}
 			}
-			_game->getResourcePack()->getSound("GEO.CAT", ResourcePack::UFO_EXPLODE)->play();
+			_game->getMod()->getSound("GEO.CAT", Mod::UFO_EXPLODE)->play();
 			if (++_explosionCount == 3)
 			{
 				_action = BDA_END;
@@ -178,11 +167,11 @@ void BaseDefenseState::nextStep()
 			_attacks = 0;
 			return;
 		}
-		
-	
+
+
 
 		BaseFacility* def = _base->getDefenses()->at(_attacks);
-		
+
 		switch (_action)
 		{
 		case  BDA_NONE:
@@ -195,20 +184,20 @@ void BaseDefenseState::nextStep()
 			}
 			return;
 		case BDA_FIRE:
-			_lstDefenses->setCellText(_row, 1, tr("STR_FIRING").c_str());
-			_game->getResourcePack()->getSound("GEO.CAT", (def)->getRules()->getFireSound())->play();
+			_lstDefenses->setCellText(_row, 1, tr("STR_FIRING"));
+			_game->getMod()->getSound("GEO.CAT", (def)->getRules()->getFireSound())->play();
 			_timer->setInterval(333);
 			_action = BDA_RESOLVE;
 			return;
 		case BDA_RESOLVE:
 			if (!RNG::percent((def)->getRules()->getHitRatio()))
 			{
-				_lstDefenses->setCellText(_row, 2, tr("STR_MISSED").c_str());
+				_lstDefenses->setCellText(_row, 2, tr("STR_MISSED"));
 			}
 			else
 			{
-				_lstDefenses->setCellText(_row, 2, tr("STR_HIT").c_str());
-				_game->getResourcePack()->getSound("GEO.CAT", (def)->getRules()->getHitSound())->play();
+				_lstDefenses->setCellText(_row, 2, tr("STR_HIT"));
+				_game->getMod()->getSound("GEO.CAT", (def)->getRules()->getHitSound())->play();
 				int dmg = (def)->getRules()->getDefenseValue();
 				_ufo->setDamage(_ufo->getDamage() + (dmg / 2 + RNG::generate(0, dmg)));
 			}
@@ -224,6 +213,7 @@ void BaseDefenseState::nextStep()
 		}
 	}
 }
+
 /**
  * Returns to the previous screen.
  * @param action Pointer to an action.

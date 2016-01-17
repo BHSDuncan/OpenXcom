@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -28,6 +28,7 @@
 #include "Action.h"
 #include "Options.h"
 #include "CrossPlatform.h"
+#include "FileMap.h"
 #include "Zoom.h"
 #include "Timer.h"
 #include <SDL.h>
@@ -164,7 +165,7 @@ void Screen::handle(Action *action)
 		do
 		{
 			ss.str("");
-			ss << Options::getUserFolder() << "screen" << std::setfill('0') << std::setw(3) << i << ".png";
+			ss << Options::getMasterUserFolder() << "screen" << std::setfill('0') << std::setw(3) << i << ".png";
 			i++;
 		}
 		while (CrossPlatform::fileExists(ss.str()));
@@ -232,7 +233,7 @@ void Screen::setPalette(SDL_Color* colors, int firstcolor, int ncolors, bool imm
 {
 	if (_numColors && (_numColors != ncolors) && (_firstColor != firstcolor))
 	{
-		// an initial palette setup has not been comitted to the screen yet
+		// an initial palette setup has not been committed to the screen yet
 		// just update it with whatever colors are being sent now
 		memmove(&(deferredPalette[firstcolor]), colors, sizeof(SDL_Color)*ncolors);
 		_numColors = 256; // all the use cases are just a full palette with 16-color follow-ups
@@ -311,10 +312,9 @@ void Screen::resetDisplay(bool resetVideo)
 #endif
 	makeVideoFlags();
 
-	if (!_surface || (_surface && 
-		(_surface->getSurface()->format->BitsPerPixel != _bpp || 
+	if (!_surface || (_surface->getSurface()->format->BitsPerPixel != _bpp || 
 		_surface->getSurface()->w != _baseWidth ||
-		_surface->getSurface()->h != _baseHeight))) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
+		_surface->getSurface()->h != _baseHeight)) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
 	{
 		if (_surface) delete _surface;
 		_surface = new Surface(_baseWidth, _baseHeight, 0, 0, Screen::is32bitEnabled() ? 32 : 8); // only HQX needs 32bpp for this surface; the OpenGL class has its own 32bpp buffer
@@ -449,7 +449,7 @@ void Screen::resetDisplay(bool resetVideo)
 #ifndef __NO_OPENGL
 		glOutput.init(_baseWidth, _baseHeight);
 		glOutput.linear = Options::useOpenGLSmoothing; // setting from shader file will override this, though
-		glOutput.set_shader(CrossPlatform::getDataFile(Options::useOpenGLShader).c_str());
+		glOutput.set_shader(FileMap::getFilePath(Options::useOpenGLShader).c_str());
 		glOutput.setVSync(Options::vSyncForOpenGL);
 		OpenGL::checkErrors = Options::checkOpenGLErrors;
 #endif
@@ -582,13 +582,13 @@ int Screen::getDY()
 }
 
 /**
-* Changes a given scale, and if necessary, switch the current base resolution.
-* @param type reference to which scale option we are using, battlescape or geoscape.
-* @param selection the new scale level.
-* @param width reference to which x scale to adjust.
-* @param height reference to which y scale to adjust.
-* @param change should we change the current scale.
-*/
+ * Changes a given scale, and if necessary, switch the current base resolution.
+ * @param type reference to which scale option we are using, battlescape or geoscape.
+ * @param selection the new scale level.
+ * @param width reference to which x scale to adjust.
+ * @param height reference to which y scale to adjust.
+ * @param change should we change the current scale.
+ */
 void Screen::updateScale(int &type, int selection, int &width, int &height, bool change)
 {
 	double pixelRatioY = 1.0;

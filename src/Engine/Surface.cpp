@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,15 +17,16 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Surface.h"
-#include "Screen.h"
 #include "ShaderDraw.h"
 #include <vector>
 #include <fstream>
 #include <SDL_gfxPrimitives.h>
 #include <SDL_image.h>
 #include <SDL_endian.h>
+#include "../lodepng.h"
 #include "Palette.h"
 #include "Exception.h"
+#include "Logger.h"
 #include "ShaderMove.h"
 #include <stdlib.h>
 #ifdef _WIN32
@@ -134,7 +135,7 @@ inline void DeleteAligned(void* buffer)
  * @param y Y position in pixels.
  * @param bpp Bits-per-pixel depth.
  */
-Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _alignedBuffer(0)
+Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _tftdMode(false), _alignedBuffer(0)
 {
 	_alignedBuffer = NewAligned(bpp, width, height);
 	_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
@@ -255,12 +256,50 @@ void Surface::loadImage(const std::string &filename)
 	_alignedBuffer = 0;
 	_surface = 0;
 
-	// SDL only takes UTF-8 filenames
-	// so here's an ugly hack to match this ugly reasoning
-	std::string utf8 = Language::wstrToUtf8(Language::fsToWstr(filename));
+	Log(LOG_VERBOSE) << "Loading image: " << filename;
 
-	// Load file
-	_surface = IMG_Load(utf8.c_str());
+	// Try loading with LodePNG first
+	std::vector<unsigned char> png;
+	unsigned error = lodepng::load_file(png, filename);
+	if (!error)
+	{
+		std::vector<unsigned char> image;
+		unsigned width, height;
+		lodepng::State state;
+		state.decoder.color_convert = 0;
+		error = lodepng::decode(image, width, height, state, png);
+		if (!error)
+		{
+			LodePNGColorMode *color = &state.info_png.color;
+			unsigned bpp = lodepng_get_bpp(color);
+			if (bpp == 8)
+			{
+				_alignedBuffer = NewAligned(bpp, width, height);
+				_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
+				if (_surface)
+				{
+					int x = 0, y = 0;
+					for (std::vector<unsigned char>::const_iterator i = image.begin(); i != image.end(); ++i)
+					{
+						setPixelIterative(&x, &y, *i);
+					}
+					setPalette((SDL_Color*)color->palette, 0, color->palettesize);
+
+					SDL_SetColorKey(_surface, SDL_SRCCOLORKEY, 0);
+				}
+			}
+		}
+	}
+
+	// Otherwise default to SDL_Image
+	if (!_surface)
+	{
+		// SDL only takes UTF-8 filenames
+		// so here's an ugly hack to match this ugly reasoning
+		std::string utf8 = Language::wstrToUtf8(Language::fsToWstr(filename));
+		_surface = IMG_Load(utf8.c_str());
+	}
+
 	if (!_surface)
 	{
 		std::string err = filename + ":" + IMG_GetError();
@@ -484,7 +523,7 @@ void Surface::think()
  * Draws the graphic that the surface contains before it
  * gets blitted onto other surfaces. The surface is only
  * redrawn if the flag is set by a property change, to
- * avoid unecessary drawing.
+ * avoid unnecessary drawing.
  */
 void Surface::draw()
 {
@@ -862,10 +901,10 @@ std::string Surface::getTooltip() const
 }
 
 /**
-* Changes the help description of this surface,
-* for example for showing in tooltips.
-* @param tooltip String ID.
-*/
+ * Changes the help description of this surface,
+ * for example for showing in tooltips.
+ * @param tooltip String ID.
+ */
 void Surface::setTooltip(const std::string &tooltip)
 {
 	_tooltip = tooltip;
@@ -893,7 +932,7 @@ void Surface::resize(int width, int height)
 
 	// Copy old contents
 	SDL_SetColorKey(surface, SDL_SRCCOLORKEY, 0);
-	SDL_SetColors(surface, getPalette(), 0, 255);
+	SDL_SetColors(surface, getPalette(), 0, 256);
 	SDL_BlitSurface(_surface, 0, surface, 0);
 
 	// Delete old surface
@@ -930,4 +969,21 @@ void Surface::setHeight(int height)
 	_redraw = true;
 }
 
+/**
+ * TFTD mode: much like click inversion, but does a colour swap rather than a palette shift.
+ * @param mode set TFTD mode to this.
+ */
+void Surface::setTFTDMode(bool mode)
+{
+	_tftdMode = mode;
+}
+
+/**
+ * checks TFTD mode.
+ * @return TFTD mode.
+ */
+bool Surface::isTFTDMode()
+{
+	return _tftdMode;
+}
 }

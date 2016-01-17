@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,9 +17,9 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "CraftWeapon.h"
-#include "../Ruleset/RuleCraftWeapon.h"
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/RuleItem.h"
+#include "../Mod/RuleCraftWeapon.h"
+#include "../Mod/Mod.h"
+#include "../Mod/RuleItem.h"
 #include "CraftWeaponProjectile.h"
 
 namespace OpenXcom
@@ -130,14 +130,13 @@ void CraftWeapon::setRearming(bool rearming)
  */
 int CraftWeapon::rearm(const int available, const int clipSize)
 {
-	int needed = 0;
+	int ammoUsed = _rules->getRearmRate();
 
 	if (clipSize > 0)
-	{	// +(clipSize - 1) for correct rounding up
-		needed = std::min(_rules->getRearmRate(), _rules->getAmmoMax() - _ammo + clipSize - 1) / clipSize;
+	{	// +(clipSize - 1) correction for rounding up
+		int needed = std::min(_rules->getRearmRate(), _rules->getAmmoMax() - _ammo + clipSize - 1) / clipSize;
+		ammoUsed = ((needed > available)? available : needed) * clipSize;
 	}
-
-	int ammoUsed = (available >= needed)? _rules->getRearmRate() : available * clipSize;
 
 	setAmmo(_ammo + ammoUsed);
 
@@ -163,13 +162,13 @@ CraftWeaponProjectile* CraftWeapon::fire() const
 
 /*
  * get how many clips are loaded into this weapon.
- * @param ruleset a pointer to the core ruleset.
+ * @param mod a pointer to the core mod.
  * @return number of clips loaded.
  */
-int CraftWeapon::getClipsLoaded(Ruleset *ruleset)
+int CraftWeapon::getClipsLoaded(Mod *mod)
 {
 	int retVal = (int)floor((double)_ammo / _rules->getRearmRate());
-	RuleItem *clip = ruleset->getItem(_rules->getClipItem());
+	RuleItem *clip = mod->getItem(_rules->getClipItem());
 
 	if (clip && clip->getClipSize() > 0)
 	{

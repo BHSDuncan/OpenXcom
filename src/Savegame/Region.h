@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_REGION_H
-#define OPENXCOM_REGION_H
-
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
@@ -53,13 +51,11 @@ public:
 	/// add alien activity in this region
 	void addActivityAlien(int activity);
 	/// get xcom activity to this region
-	const std::vector<int> &getActivityXcom() const;
+	std::vector<int> &getActivityXcom();
 	/// get xcom activity to this region
-	const std::vector<int> &getActivityAlien() const;
+	std::vector<int> &getActivityAlien();
 	/// start new month of activity
 	void newMonth();
 };
 
 }
-
-#endif

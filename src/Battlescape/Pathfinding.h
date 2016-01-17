@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,13 +17,10 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_PATHFINDING_H
-#define OPENXCOM_PATHFINDING_H
-
 #include <vector>
 #include "Position.h"
 #include "PathfindingNode.h"
-#include "../Ruleset/MapData.h"
+#include "../Mod/MapData.h"
 
 namespace OpenXcom
 {
@@ -86,7 +84,7 @@ public:
 	/// Dequeues a direction.
 	int dequeuePath();
 	/// Gets the TU cost to move from 1 tile to the other.
-	int getTUCost(const Position &startPosition, const int direction, Position *endPosition, BattleUnit *unit, BattleUnit *target, bool missile);
+	int getTUCost(const Position &startPosition, int direction, Position *endPosition, BattleUnit *unit, BattleUnit *target, bool missile);
 	/// Aborts the current path.
 	void abortPath();
 	/// Gets the strafe move setting.
@@ -114,5 +112,3 @@ public:
 };
 
 }
-
-#endif

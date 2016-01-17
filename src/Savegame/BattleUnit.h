@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,17 +17,16 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_BATTLEUNIT_H
-#define OPENXCOM_BATTLEUNIT_H
-
 #include <vector>
 #include <string>
+#include <yaml-cpp/yaml.h>
 #include "../Battlescape/Position.h"
 #include "../Battlescape/BattlescapeGame.h"
-#include "../Ruleset/RuleItem.h"
-#include "../Ruleset/Unit.h"
-#include "../Ruleset/MapData.h"
+#include "../Mod/RuleItem.h"
+#include "../Mod/Unit.h"
+#include "../Mod/MapData.h"
 #include "Soldier.h"
+#include "BattleItem.h"
 
 namespace OpenXcom
 {
@@ -35,6 +35,7 @@ class Tile;
 class BattleItem;
 class Unit;
 class BattleAIState;
+class SavedBattleGame;
 class Node;
 class Surface;
 class RuleInventory;
@@ -44,12 +45,13 @@ class SavedGame;
 class Language;
 class AlienBAIState;
 class CivilianBAIState;
+struct BattleUnitStatistics;
+struct StatAdjustment;
 
-enum UnitStatus {STATUS_STANDING, STATUS_WALKING, STATUS_FLYING, STATUS_TURNING, STATUS_AIMING, STATUS_COLLAPSING, STATUS_DEAD, STATUS_UNCONSCIOUS, STATUS_PANICKING, STATUS_BERSERK};
+enum UnitStatus {STATUS_STANDING, STATUS_WALKING, STATUS_FLYING, STATUS_TURNING, STATUS_AIMING, STATUS_COLLAPSING, STATUS_DEAD, STATUS_UNCONSCIOUS, STATUS_PANICKING, STATUS_BERSERK, STATUS_IGNORE_ME};
 enum UnitFaction {FACTION_PLAYER, FACTION_HOSTILE, FACTION_NEUTRAL};
 enum UnitSide {SIDE_FRONT, SIDE_LEFT, SIDE_RIGHT, SIDE_REAR, SIDE_UNDER};
 enum UnitBodyPart {BODYPART_HEAD, BODYPART_TORSO, BODYPART_RIGHTARM, BODYPART_LEFTARM, BODYPART_RIGHTLEG, BODYPART_LEFTLEG};
-
 
 /**
  * Represents a moving unit in the battlescape, player controlled or AI controlled
@@ -58,6 +60,8 @@ enum UnitBodyPart {BODYPART_HEAD, BODYPART_TORSO, BODYPART_RIGHTARM, BODYPART_LE
 class BattleUnit
 {
 private:
+	static const int SPEC_WEAPON_MAX = 3;
+
 	UnitFaction _faction, _originalFaction;
 	UnitFaction _killedBy;
 	int _id;
@@ -74,10 +78,11 @@ private:
 	std::vector<Tile *> _visibleTiles;
 	int _tu, _energy, _health, _morale, _stunlevel;
 	bool _kneeled, _floating, _dontReselect;
-	int _currentArmor[5];
+	int _currentArmor[5], _maxArmor[5];
 	int _fatalWounds[6];
 	int _fire;
 	std::vector<BattleItem*> _inventory;
+	BattleItem* _specWeapon[SPEC_WEAPON_MAX];
 	BattleAIState *_currentAIState;
 	bool _visible;
 	Surface *_cache[5];
@@ -94,6 +99,11 @@ private:
 	int _turnsSinceSpotted;
 	std::string _spawnUnit;
 	std::string _activeHand;
+	BattleUnitStatistics* _statistics;
+	int _murdererId;	// used to credit the murderer with the kills that this unit got by blowing up on death
+	UnitSide _fatalShotSide;
+	UnitBodyPart _fatalShotBodyPart;
+	std::string _murdererWeapon, _murdererWeaponAmmo;
 
 	// static data
 	std::string _type;
@@ -102,7 +112,8 @@ private:
 	std::wstring _name;
 	UnitStats _stats;
 	int _standHeight, _kneelHeight, _floatHeight;
-	int _value, _deathSound, _aggroSound, _moveSound;
+	std::vector<int> _deathSound;
+	int _value, _aggroSound, _moveSound;
 	int _intelligence, _aggression;
 	SpecialAbility _specab;
 	Armor *_armor;
@@ -116,11 +127,16 @@ private:
 	bool _breathing;
 	bool _hidingForTurn, _floorAbove, _respawn;
 	MovementType _movementType;
+	std::vector<std::pair<Uint8, Uint8> > _recolor;
+
+	/// Helper function initing recolor vector.
+	void setRecolor(int basicLook, int utileLook, int rankLook);
 public:
 	static const int MAX_SOLDIER_ID = 1000000;
-	/// Creates a BattleUnit.
+	/// Creates a BattleUnit from solder.
 	BattleUnit(Soldier *soldier, int depth);
-	BattleUnit(Unit *unit, UnitFaction faction, int id, Armor *armor, int diff, int depth);
+	/// Creates a BattleUnit from unit.
+	BattleUnit(Unit *unit, UnitFaction faction, int id, Armor *armor, StatAdjustment *adjustment, int depth);
 	/// Cleans up the BattleUnit.
 	~BattleUnit();
 	/// Loads the unit from YAML.
@@ -177,6 +193,8 @@ public:
 	void setCache(Surface *cache, int part = 0);
 	/// If this unit is cached on the battlescape.
 	Surface *getCache(bool *invalid, int part = 0) const;
+	/// Gets unit sprite recolors values.
+	const std::vector<std::pair<Uint8, Uint8> > &getRecolor() const;
 	/// Kneel down.
 	void kneel(bool kneeled);
 	/// Is kneeled?
@@ -242,12 +260,14 @@ public:
 	void setArmor(int armor, UnitSide side);
 	/// Get armor value.
 	int getArmor(UnitSide side) const;
+	/// Get max armor value.
+	int getMaxArmor(UnitSide side) const;
 	/// Get total number of fatal wounds.
 	int getFatalWounds() const;
 	/// Get the current reaction score.
 	double getReactionScore();
 	/// Prepare for a new turn.
-	void prepareNewTurn();
+	void prepareNewTurn(bool fullProcess = true);
 	/// Morale change
 	void moraleChange(int change);
 	/// Don't reselect this unit
@@ -338,8 +358,8 @@ public:
 	int getLoftemps(int entry = 0) const;
 	/// Get the unit's value.
 	int getValue() const;
-	/// Get the unit's death sound.
-	int getDeathSound() const;
+	/// Get the unit's death sounds.
+	const std::vector<int> &getDeathSounds() const;
 	/// Get the unit's move sound.
 	int getMoveSound() const;
 	/// Get whether the unit is affected by fatal wounds.
@@ -380,8 +400,6 @@ public:
 	int getAggroSound() const;
 	/// Sets the unit's energy level.
 	void setEnergy(int energy);
-	/// Halve the unit's armor values.
-	void halveArmor();
 	/// Get the faction that killed this unit.
 	UnitFaction killedBy() const;
 	/// Set the faction that killed this unit.
@@ -415,7 +433,7 @@ public:
 	/// this function checks if a tile is visible, using maths.
 	bool checkViewSector(Position pos) const;
 	/// adjust this unit's stats according to difficulty.
-	void adjustStats(const int diff);
+	void adjustStats(const StatAdjustment &adjustment);
 	/// did this unit already take fire damage this turn? (used to avoid damaging large units multiple times.)
 	bool tookFireDamage() const;
 	/// switch the state of the fire damage tracker.
@@ -434,17 +452,42 @@ public:
 	void setFloorAbove(bool floor);
 	/// Get the flag for "floor above me".
 	bool getFloorAbove();
-	/// Get the name of any melee weapon we may be carrying, or a built in one.
-	std::string getMeleeWeapon();
+	/// Get any melee weapon we may be carrying, or a built in one.
+	BattleItem *getMeleeWeapon();
 	/// Use this function to check the unit's movement type.
 	MovementType getMovementType() const;
 	/// Checks if this unit is in hiding for a turn.
 	bool isHiding() {return _hidingForTurn; };
 	/// Sets this unit is in hiding for a turn (or not).
 	void setHiding(bool hiding) { _hidingForTurn = hiding; };
-
+	/// Puts the unit in the corner to think about what he's done.
+	void goToTimeOut();
+	/// Create special weapon for unit.
+	void setSpecialWeapon(SavedBattleGame *save, const Mod *mod);
+	/// Get special weapon.
+	BattleItem *getSpecialWeapon(BattleType type) const;
+	/// Recovers the unit's time units and energy.
+	void recoverTimeUnits();
+    /// Get the unit's mission statistics.
+    BattleUnitStatistics* getStatistics();
+	/// Set the unit murderer's id.
+	void setMurdererId(int id);
+	/// Get the unit murderer's id.
+	int getMurdererId() const;
+    /// Set information on the unit's fatal shot.
+    void setFatalShotInfo(UnitSide side, UnitBodyPart bodypart);
+    /// Get information on the unit's fatal shot's side.
+    UnitSide getFatalShotSide() const;
+    /// Get information on the unit's fatal shot's body part.
+    UnitBodyPart getFatalShotBodyPart() const;
+    /// Get the unit murderer's weapon.
+    std::string getMurdererWeapon() const;
+    /// Set the unit murderer's weapon.
+    void setMurdererWeapon(std::string weapon);
+       /// Get the unit murderer's weapon's ammo.
+    std::string getMurdererWeaponAmmo() const;
+    /// Set the unit murderer's weapon's ammo.
+    void setMurdererWeaponAmmo(std::string weaponAmmo);   
 };
 
 }
-
-#endif

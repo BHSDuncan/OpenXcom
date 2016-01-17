@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_ADLIBMUSIC_H
-#define OPENXCOM_ADLIBMUSIC_H
-
 #include "Music.h"
 #include <map>
 #include <string>
@@ -52,8 +50,7 @@ public:
 	void play(int loop = -1) const;
 	/// Adlib music player.
 	static void player(void *udata, Uint8 *stream, int len);
+	bool isPlaying();
 };
 
 }
-
-#endif

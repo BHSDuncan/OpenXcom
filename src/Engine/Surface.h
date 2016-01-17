@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,11 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_SURFACE_H
-#define OPENXCOM_SURFACE_H
-
 #include <SDL.h>
-#include <SDL_image.h>
 #include <string>
 
 namespace OpenXcom
@@ -42,7 +39,7 @@ protected:
 	SDL_Surface *_surface;
 	int _x, _y;
 	SDL_Rect _crop, _clear;
-	bool _visible, _hidden, _redraw;
+	bool _visible, _hidden, _redraw, _tftdMode;
 	void *_alignedBuffer;
 	std::string _tooltip;
 
@@ -123,7 +120,7 @@ public:
 		return _y;
 	}
 	/// Sets the surface's visibility.
-	void setVisible(bool visible);
+	virtual void setVisible(bool visible);
 	/// Gets the surface's visibility.
 	bool getVisible() const;
 	/// Resets the cropping rectangle for the surface.
@@ -220,14 +217,16 @@ public:
 	/// Sets the tooltip of the surface.
 	void setTooltip(const std::string &tooltip);
 	/// Sets the color of the surface.
-	virtual void setColor(Uint8 color) { /* empty by design */ };
+	virtual void setColor(Uint8 /*color*/) { /* empty by design */ };
 	/// Sets the secondary color of the surface.
-	virtual void setSecondaryColor(Uint8 color) { /* empty by design */ };
+	virtual void setSecondaryColor(Uint8 /*color*/) { /* empty by design */ };
 	/// Sets the border colour of the surface.
-	virtual void setBorderColor(Uint8 color) { /* empty by design */ };
+	virtual void setBorderColor(Uint8 /*color*/) { /* empty by design */ };
+	/// Sets this button to use a colour lookup table instead of inversion for its alternate form.
+	virtual void setTFTDMode(bool mode);
+	/// checks if this is a TFTD mode surface.
+	bool isTFTDMode();
 
 };
 
 }
-
-#endif

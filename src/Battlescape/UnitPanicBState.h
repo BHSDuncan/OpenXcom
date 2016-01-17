@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,11 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_UNITPANICBSTATE_H
-#define OPENXCOM_UNITPANICBSTATE_H
-
 #include "BattleState.h"
-#include <string>
 
 namespace OpenXcom
 {
@@ -34,6 +31,8 @@ class UnitPanicBState : public BattleState
 {
 private:
 	BattleUnit *_unit;
+	bool _berserking;
+	int _shotsFired;
 public:
 	/// Creates a new UnitPanicBState class
 	UnitPanicBState(BattlescapeGame *parent, BattleUnit *unit);
@@ -45,10 +44,6 @@ public:
 	void cancel();
 	/// Runs state functionality every cycle.
 	void think();
-	/// Gets the result of the state.
-	std::string getResult() const;
 };
 
 }
-
-#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -24,21 +24,17 @@
 #include "../Engine/Game.h"
 #include "../Engine/Action.h"
 #include "../Engine/Screen.h"
-#include "../Resource/ResourcePack.h"
-#include "../Engine/Language.h"
-#include "../Engine/Palette.h"
+#include "../Mod/Mod.h"
+#include "../Engine/LocalizedText.h"
 #include "../Interface/Bar.h"
 #include "../Interface/Text.h"
 #include "../Interface/TextButton.h"
 #include "../Engine/InteractiveSurface.h"
-#include "../Savegame/Base.h"
-#include "../Ruleset/Ruleset.h"
-#include "../Ruleset/RuleInterface.h"
-#include "../Ruleset/Armor.h"
-#include "../Ruleset/Unit.h"
+#include "../Mod/Unit.h"
 #include "../Engine/Options.h"
 #include "BattlescapeGame.h"
 #include "BattlescapeState.h"
+#include "../Mod/RuleInterface.h"
 
 namespace OpenXcom
 {
@@ -245,21 +241,21 @@ UnitInfoState::UnitInfoState(BattleUnit *unit, BattlescapeState *parent, bool fr
 
 	if (!_mindProbe)
 	{
-		add(_btnPrev);
-		add(_btnNext);
+		add(_btnPrev, "button", "stats");
+		add(_btnNext, "button", "stats");
 	}
 
 	centerAllSurfaces();
 
 	// Set up objects
-	_game->getResourcePack()->getSurface("UNIBORD.PCK")->blit(_bg);
+	_game->getMod()->getSurface("UNIBORD.PCK")->blit(_bg);
 
 	_exit->onMouseClick((ActionHandler)&UnitInfoState::exitClick);
 	_exit->onKeyboardPress((ActionHandler)&UnitInfoState::exitClick, Options::keyCancel);
 	_exit->onKeyboardPress((ActionHandler)&UnitInfoState::exitClick, Options::keyBattleStats);
-	
-	Uint8 color = _game->getRuleset()->getInterface("stats")->getElement("text")->color;
-	Uint8 color2 = _game->getRuleset()->getInterface("stats")->getElement("text")->color2;
+
+	Uint8 color = _game->getMod()->getInterface("stats")->getElement("text")->color;
+	Uint8 color2 = _game->getMod()->getInterface("stats")->getElement("text")->color2;
 
 	_txtName->setAlign(ALIGN_CENTER);
 	_txtName->setBig();
@@ -430,11 +426,9 @@ UnitInfoState::UnitInfoState(BattleUnit *unit, BattlescapeState *parent, bool fr
 	if (!_mindProbe)
 	{
 		_btnPrev->setText(L"<<");
-		_btnPrev->setColor(Palette::blockOffset(4));
 		_btnPrev->onMouseClick((ActionHandler)&UnitInfoState::btnPrevClick);
 		_btnPrev->onKeyboardPress((ActionHandler)&UnitInfoState::btnPrevClick, Options::keyBattlePrevUnit);
 		_btnNext->setText(L">>");
-		_btnNext->setColor(Palette::blockOffset(4));
 		_btnNext->onMouseClick((ActionHandler)&UnitInfoState::btnNextClick);
 		_btnNext->onKeyboardPress((ActionHandler)&UnitInfoState::btnNextClick, Options::keyBattleNextUnit);
 	}
@@ -534,7 +528,7 @@ void UnitInfoState::init()
 	_barStrength->setMax(_unit->getBaseStats()->strength);
 	_barStrength->setValue(_unit->getBaseStats()->strength);
 
-	if (_unit->getBaseStats()->psiSkill > 0 || (Options::psiStrengthEval && _game->getSavedGame()->isResearched(_game->getRuleset()->getPsiRequirements())))
+	if (_unit->getBaseStats()->psiSkill > 0 || (Options::psiStrengthEval && _game->getSavedGame()->isResearched(_game->getMod()->getPsiRequirements())))
 	{
 		ss.str(L"");
 		ss << _unit->getBaseStats()->psiStrength;
@@ -575,31 +569,31 @@ void UnitInfoState::init()
 	ss.str(L"");
 	ss << _unit->getArmor(SIDE_FRONT);
 	_numFrontArmor->setText(ss.str());
-	_barFrontArmor->setMax(_unit->getArmor()->getFrontArmor());
+	_barFrontArmor->setMax(_unit->getMaxArmor(SIDE_FRONT));
 	_barFrontArmor->setValue(_unit->getArmor(SIDE_FRONT));
 
 	ss.str(L"");
 	ss << _unit->getArmor(SIDE_LEFT);
 	_numLeftArmor->setText(ss.str());
-	_barLeftArmor->setMax(_unit->getArmor()->getSideArmor());
+	_barLeftArmor->setMax(_unit->getMaxArmor(SIDE_LEFT));
 	_barLeftArmor->setValue(_unit->getArmor(SIDE_LEFT));
 
 	ss.str(L"");
 	ss << _unit->getArmor(SIDE_RIGHT);
 	_numRightArmor->setText(ss.str());
-	_barRightArmor->setMax(_unit->getArmor()->getSideArmor());
+	_barRightArmor->setMax(_unit->getMaxArmor(SIDE_RIGHT));
 	_barRightArmor->setValue(_unit->getArmor(SIDE_RIGHT));
 
 	ss.str(L"");
 	ss << _unit->getArmor(SIDE_REAR);
 	_numRearArmor->setText(ss.str());
-	_barRearArmor->setMax(_unit->getArmor()->getRearArmor());
+	_barRearArmor->setMax(_unit->getMaxArmor(SIDE_REAR));
 	_barRearArmor->setValue(_unit->getArmor(SIDE_REAR));
 
 	ss.str(L"");
 	ss << _unit->getArmor(SIDE_UNDER);
 	_numUnderArmor->setText(ss.str());
-	_barUnderArmor->setMax(_unit->getArmor()->getUnderArmor());
+	_barUnderArmor->setMax(_unit->getMaxArmor(SIDE_UNDER));
 	_barUnderArmor->setValue(_unit->getArmor(SIDE_UNDER));
 }
 

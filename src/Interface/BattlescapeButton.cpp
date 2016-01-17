@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -29,7 +29,7 @@ namespace OpenXcom
  * @param x X position in pixels.
  * @param y Y position in pixels.
  */
-BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _inverted(false), _tftdMode(false), _toggleMode(INVERT_NONE), _altSurface(0)
+BattlescapeButton::BattlescapeButton(int width, int height, int x, int y) : InteractiveSurface(width, height, x, y), _color(0), _group(0), _inverted(false), _toggleMode(INVERT_NONE), _altSurface(0)
 {
 }
 
@@ -137,19 +137,10 @@ void BattlescapeButton::allowClickInversion()
 	_toggleMode = INVERT_CLICK;
 }
 
-
-/**
- * TFTD mode: much like click inversion, but does a colour swap rather than a palette shift.
- */
-void BattlescapeButton::setTftdMode(bool mode)
-{
-	_tftdMode = mode;
-}
-
 /**
  * Initializes the alternate surface for swapping out as needed.
  * performs a colour swap for TFTD style buttons, and a palette inversion for coloured buttons
- * we use two seperate surfaces because it's far easier to keep track of
+ * we use two separate surfaces because it's far easier to keep track of
  * whether or not this surface is inverted.
  */
 void BattlescapeButton::initSurfaces()

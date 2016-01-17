@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_OPTIONSADVANCEDSTATE_H
-#define OPENXCOM_OPTIONSADVANCEDSTATE_H
-
 #include "OptionsBaseState.h"
 #include "../Engine/OptionInfo.h"
 #include <vector>
@@ -37,7 +35,6 @@ class OptionsAdvancedState : public OptionsBaseState
 {
 private:
 	TextList *_lstOptions;
-	size_t _boolQuantity;
 	Uint8 _colorGroup;
 	std::vector<OptionInfo> _settingsGeneral, _settingsGeo, _settingsBattle;
 
@@ -60,5 +57,3 @@ public:
 };
 
 }
-
-#endif

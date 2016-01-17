@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -18,21 +18,15 @@
  */
 
 #include "UnitFallBState.h"
-#include "ProjectileFlyBState.h"
 #include "TileEngine.h"
 #include "Pathfinding.h"
-#include "BattlescapeState.h"
 #include "Map.h"
 #include "Camera.h"
-#include "BattleAIState.h"
-#include "ExplosionBState.h"
-#include "../Engine/Game.h"
 #include "../Savegame/BattleUnit.h"
 #include "../Savegame/SavedBattleGame.h"
 #include "../Savegame/Tile.h"
-#include "../Resource/ResourcePack.h"
 #include "../Engine/Options.h"
-#include "../Ruleset/Armor.h"
+#include "../Mod/Armor.h"
 
 namespace OpenXcom
 {
@@ -87,7 +81,7 @@ void UnitFallBState::think()
 			unit = _parent->getSave()->getFallingUnits()->erase(unit);
 			continue;
 		}
-		bool onScreen = ((*unit)->getVisible() && _parent->getMap()->getCamera()->isOnScreen((*unit)->getPosition(), true));
+		bool onScreen = ((*unit)->getVisible() && _parent->getMap()->getCamera()->isOnScreen((*unit)->getPosition(), true, size, false));
 		Tile *tileBelow = _parent->getSave()->getTile((*unit)->getPosition() + Position(0,0,-1));
 		for (int x = size; x >= 0; x--)
 		{

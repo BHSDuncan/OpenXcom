@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_PROJECTILEFLYBSTATE_H
-#define OPENXCOM_PROJECTILEFLYBSTATE_H
-
 #include "BattleState.h"
 #include "Position.h"
 
@@ -64,10 +62,7 @@ public:
 	void setOriginVoxel(Position pos);
 	/// Set the boolean flag to angle a blaster bomb towards the floor.
 	void targetFloor();
-	void performMeleeAttack();
 
 };
 
 }
-
-#endif

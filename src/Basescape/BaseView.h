@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_BASEVIEW_H
-#define OPENXCOM_BASEVIEW_H
-
 #include "../Engine/InteractiveSurface.h"
 
 namespace OpenXcom
@@ -52,6 +50,7 @@ private:
 	Surface *_selector;
 	bool _blink;
 	Timer *_timer;
+	Uint8 _cellColor, _selectorColor;
 	/// Updates the neighborFacility's build time. This is for internal use only (reCalcQueuedBuildings()).
 	void updateNeighborFacilityBuildTime(BaseFacility* facility, BaseFacility* neighbor);
 public:
@@ -93,8 +92,10 @@ public:
 	void mouseOver(Action *action, State *state);
 	/// Special handling for mouse hovering out.
 	void mouseOut(Action *action, State *state);
+
+	void setColor(Uint8 color);
+
+	void setSecondaryColor(Uint8 color);
 };
 
 }
-
-#endif

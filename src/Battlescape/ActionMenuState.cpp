@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,17 +17,13 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "ActionMenuState.h"
-#include <sstream>
-#include <cmath>
 #include "../Engine/Game.h"
 #include "../Engine/Options.h"
-#include "../Resource/ResourcePack.h"
-#include "../Engine/Language.h"
-#include "../Engine/Palette.h"
+#include "../Engine/LocalizedText.h"
 #include "../Engine/Action.h"
 #include "../Savegame/BattleUnit.h"
 #include "../Savegame/BattleItem.h"
-#include "../Ruleset/RuleItem.h"
+#include "../Mod/RuleItem.h"
 #include "ActionMenuItem.h"
 #include "PrimeGrenadeState.h"
 #include "MedikitState.h"
@@ -212,11 +208,18 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 	{
 		_action->type = _actionMenu[btnID]->getAction();
 		_action->TU = _actionMenu[btnID]->getTUs();
-		if (weapon->isWaterOnly() &&
+		if (_action->type != BA_THROW &&
+			_action->actor->getOriginalFaction() == FACTION_PLAYER &&
+			!_game->getSavedGame()->isResearched(weapon->getRequirements()))
+		{
+			_action->result = "STR_UNABLE_TO_USE_ALIEN_ARTIFACT_UNTIL_RESEARCHED";
+			_game->popState();
+		}
+		else if (weapon->isWaterOnly() &&
 			_game->getSavedGame()->getSavedBattle()->getDepth() == 0 &&
 			_action->type != BA_THROW)
 		{
-			_action->result = "STR_THIS_EQUIPMENT_WILL_NOT_FUNCTION_ABOVE_WATER";
+			_action->result = "STR_UNDERWATER_EQUIPMENT";
 			_game->popState();
 		}
 		else if (_action->type == BA_PRIME)
@@ -249,7 +252,7 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 					_action->actor->getPosition(),
 					_action->actor->getDirection(),
 					_action->actor,
-					0, &_action->target))
+					0, &_action->target, false))
 				{
 					Tile * tile (_game->getSavedGame()->getSavedBattle()->getTile(_action->target));
 					if (tile != 0 && tile->getUnit() && tile->getUnit()->isWoundable())
@@ -300,9 +303,14 @@ void ActionMenuState::btnActionMenuItemClick(Action *action)
 			}
 			_game->popState();
 		}
-		else if (_action->type == BA_STUN || _action->type == BA_HIT)
+		else if (_action->type == BA_HIT)
 		{
-			if (!_game->getSavedGame()->getSavedBattle()->getTileEngine()->validMeleeRange(
+			// check beforehand if we have enough time units
+			if (_action->TU > _action->actor->getTimeUnits())
+			{
+				_action->result = "STR_NOT_ENOUGH_TIME_UNITS";
+			}
+			else if (!_game->getSavedGame()->getSavedBattle()->getTileEngine()->validMeleeRange(
 				_action->actor->getPosition(),
 				_action->actor->getDirection(),
 				_action->actor,

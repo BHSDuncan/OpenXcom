@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_UNITSPRITE_H
-#define OPENXCOM_UNITSPRITE_H
-
 #include "../Engine/Surface.h"
 
 namespace OpenXcom
@@ -40,6 +38,9 @@ private:
 	SurfaceSet *_unitSurface, *_itemSurfaceA, *_itemSurfaceB;
 	int _part, _animationFrame, _drawingRoutine;
 	bool _helmet;
+	const std::pair<Uint8, Uint8> *_color;
+	int _colorSize;
+
 	/// Drawing routine for XCom soldiers in overalls, sectoids (routine 0),
 	/// mutons (routine 10),
 	/// aquanauts (routine 13),
@@ -76,6 +77,8 @@ private:
 	void drawRoutine21();
 	/// sort two handed sprites out.
 	void sortRifles();
+	/// Draw surface with changed colors.
+	void drawRecolored(Surface *src);
 public:
 	/// Creates a new UnitSprite at the specified position and size.
 	UnitSprite(int width, int height, int x, int y, bool helmet);
@@ -94,5 +97,3 @@ public:
 };
 
 }
-
-#endif

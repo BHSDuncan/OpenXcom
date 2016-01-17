@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,9 +17,8 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "CrossPlatform.h"
-#include <set>
+#include <exception>
 #include <algorithm>
-#include <iostream>
 #include <sstream>
 #include <string>
 #include <locale>
@@ -29,7 +28,6 @@
 #include "Logger.h"
 #include "Exception.h"
 #include "Options.h"
-#include "Language.h"
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -38,16 +36,22 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <direct.h>
+#include <dbghelp.h>
 #ifndef SHGFP_TYPE_CURRENT
 #define SHGFP_TYPE_CURRENT 0
 #endif
+#define EXCEPTION_CODE_CXX 0xe06d7363
 #ifndef __GNUC__
 #pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "shlwapi.lib")
+#pragma comment(lib, "dbghelp.lib")
 #endif
 #else
+#include "Language.h"
+#include <iostream>
+#include <fstream>
+#include <SDL_image.h>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -55,21 +59,43 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <execinfo.h>
 #endif
 #include <SDL.h>
 #include <SDL_syswm.h>
-#include <SDL_image.h>
+#ifdef __HAIKU__
+#include <FindDirectory.h>
+#include <StorageDefs.h>
+#endif
 
 namespace OpenXcom
 {
 namespace CrossPlatform
 {
-
+	std::string errorDlg;
 #ifdef _WIN32
 	const char PATH_SEPARATOR = '\\';
 #else
 	const char PATH_SEPARATOR = '/';
 #endif
+
+/**
+ * Determines the available Linux error dialogs.
+ */
+void getErrorDialog()
+{
+#ifndef _WIN32
+	if (system(NULL))
+	{
+		if (system("which kdialog") == 0)
+			errorDlg = "kdialog";
+		else if (system("which xdialog") == 0)
+			errorDlg = "xdialog";
+		else if (system("which gdialog") == 0)
+			errorDlg = "gdialog";
+	}
+#endif
+}
 
 /**
  * Displays a message box with an error message.
@@ -80,7 +106,17 @@ void showError(const std::string &error)
 #ifdef _WIN32
 	MessageBoxA(NULL, error.c_str(), "OpenXcom Error", MB_ICONERROR | MB_OK);
 #else
-	std::cerr << error << std::endl;
+	if (errorDlg.empty())
+	{
+		std::cerr << error << std::endl;
+	}
+	else
+	{
+		std::string cmd = errorDlg;
+		cmd += " --title \"OpenXcom Error\" --error \"" + error + "\"";
+		if (system(cmd.c_str()) != 0)
+			std::cerr << error << std::endl;
+	}
 #endif
 	Log(LOG_FATAL) << error;
 }
@@ -113,7 +149,7 @@ std::vector<std::string> findDataFolders()
 {
 	std::vector<std::string> list;
 #ifdef __MORPHOS__
-	list.push_back("PROGDIR:data/");
+	list.push_back("PROGDIR:");
 	return list;
 #endif
 	
@@ -123,7 +159,7 @@ std::vector<std::string> findDataFolders()
 	// Get Documents folder
 	if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, path)))
 	{
-		PathAppendA(path, "OpenXcom\\data\\");
+		PathAppendA(path, "OpenXcom\\");
 		list.push_back(path);
 	}
 
@@ -131,34 +167,35 @@ std::vector<std::string> findDataFolders()
 	if (GetModuleFileNameA(NULL, path, MAX_PATH) != 0)
 	{
 		PathRemoveFileSpecA(path);
-		PathAppendA(path, "data\\");
 		list.push_back(path);
 	}
 
 	// Get working directory
 	if (GetCurrentDirectoryA(MAX_PATH, path) != 0)
 	{
-		PathAppendA(path, "data\\");
 		list.push_back(path);
 	}
 #else
 	char const *home = getHome();
 #ifdef __HAIKU__
-	list.push_back("/boot/apps/OpenXcom/data/");
+	char data_path[B_PATH_NAME_LENGTH];
+	find_directory(B_SYSTEM_SETTINGS_DIRECTORY, 0, true, data_path, sizeof(data_path)-strlen("/OpenXcom/"));
+	strcat(data_path,"/OpenXcom/");
+	list.push_back(data_path);
 #endif
 	char path[MAXPATHLEN];
 
 	// Get user-specific data folders
 	if (char const *const xdg_data_home = getenv("XDG_DATA_HOME"))
  	{
-		snprintf(path, MAXPATHLEN, "%s/openxcom/data/", xdg_data_home);
+		snprintf(path, MAXPATHLEN, "%s/openxcom/", xdg_data_home);
  	}
  	else
  	{
 #ifdef __APPLE__
-		snprintf(path, MAXPATHLEN, "%s/Library/Application Support/OpenXcom/data/", home);
+		snprintf(path, MAXPATHLEN, "%s/Library/Application Support/OpenXcom/", home);
 #else
-		snprintf(path, MAXPATHLEN, "%s/.local/share/openxcom/data/", home);
+		snprintf(path, MAXPATHLEN, "%s/.local/share/openxcom/", home);
 #endif
  	}
  	list.push_back(path);
@@ -169,28 +206,27 @@ std::vector<std::string> findDataFolders()
 		char *dir = strtok(xdg_data_dirs, ":");
 		while (dir != 0)
 		{
-			snprintf(path, MAXPATHLEN, "%s/openxcom/data/", dir);
+			snprintf(path, MAXPATHLEN, "%s/openxcom/", dir);
 			list.push_back(path);
 			dir = strtok(0, ":");
 		}
 	}
 #ifdef __APPLE__
-	snprintf(path, MAXPATHLEN, "%s/Users/Shared/OpenXcom/data/", home);
-	list.push_back(path);
+	list.push_back("/Users/Shared/OpenXcom/");
 #else
-	list.push_back("/usr/local/share/openxcom/data/");
+	list.push_back("/usr/local/share/openxcom/");
 #ifndef __FreeBSD__
-	list.push_back("/usr/share/openxcom/data/");
+	list.push_back("/usr/share/openxcom/");
 #endif
 #ifdef DATADIR
-	snprintf(path, MAXPATHLEN, "%s/data/", DATADIR);
+	snprintf(path, MAXPATHLEN, "%s/", DATADIR);
 	list.push_back(path);
 #endif
 
 #endif
 	
 	// Get working directory
-	list.push_back("./data/");
+	list.push_back("./");
 #endif
 
 	return list;
@@ -237,7 +273,10 @@ std::vector<std::string> findUserFolders()
 	}
 #else
 #ifdef __HAIKU__
-	list.push_back("/boot/apps/OpenXcom/");
+	char user_path[B_PATH_NAME_LENGTH];
+	find_directory(B_USER_SETTINGS_DIRECTORY, 0, true, user_path, sizeof(user_path)-strlen("/OpenXcom/"));
+	strcat(user_path,"/OpenXcom/");
+	list.push_back(user_path);
 #endif
 	char const *home = getHome();
 	char path[MAXPATHLEN];
@@ -281,7 +320,10 @@ std::string findConfigFolder()
 #if defined(_WIN32) || defined(__APPLE__)
 	return "";
 #elif defined (__HAIKU__)
-	return "/boot/home/config/settings/openxcom/";
+	char settings_path[B_PATH_NAME_LENGTH];
+	find_directory(B_USER_SETTINGS_DIRECTORY, 0, true, settings_path, sizeof(settings_path)-strlen("/OpenXcom/"));
+	strcat(settings_path,"/OpenXcom/");
+	return settings_path;
 #else
 	char const *home = getHome();
 	char path[MAXPATHLEN];
@@ -299,93 +341,7 @@ std::string findConfigFolder()
 #endif
 }
 
-/**
- * Takes a path and tries to find it based on the
- * system's case-sensitivity.
- * @param base Base unaltered path.
- * @param path Full path to check for casing.
- * @return Correct filename or "" if it doesn't exist.
- * @note There's no actual method for figuring out the correct
- * filename on case-sensitive systems, this is just a workaround.
- */
-std::string caseInsensitive(const std::string &base, const std::string &path)
-{
-	std::string fullPath = base + path, newPath = path;
-
-	// Try all various case mutations
-	// Normal unmangled
-	if (fileExists(fullPath.c_str()))
-	{
-		return fullPath;
-	}
-
-	// UPPERCASE
-	std::transform(newPath.begin(), newPath.end(), newPath.begin(), toupper);
-	fullPath = base + newPath;
-	if (fileExists(fullPath.c_str()))
-	{
-		return fullPath;
-	}
-
-	// lowercase
-	std::transform(newPath.begin(), newPath.end(), newPath.begin(), tolower);
-	fullPath = base + newPath;
-	if (fileExists(fullPath.c_str()))
-	{
-		return fullPath;
-	}
-
-	// If we got here nothing can help us
-	return "";
-}
-
-/**
- * Takes a path and tries to find it based on the
- * system's case-sensitivity.
- * @param base Base unaltered path.
- * @param path Full path to check for casing.
- * @return Correct foldername or "" if it doesn't exist.
- * @note There's no actual method for figuring out the correct
- * foldername on case-sensitive systems, this is just a workaround.
- */
-std::string caseInsensitiveFolder(const std::string &base, const std::string &path)
-{
-	std::string fullPath = base + path, newPath = path;
-
-	// Try all various case mutations
-	// Normal unmangled
-	if (folderExists(fullPath.c_str()))
-	{
-		return fullPath;
-	}
-
-	// UPPERCASE
-	std::transform(newPath.begin(), newPath.end(), newPath.begin(), toupper);
-	fullPath = base + newPath;
-	if (folderExists(fullPath.c_str()))
-	{
-		return fullPath;
-	}
-
-	// lowercase
-	std::transform(newPath.begin(), newPath.end(), newPath.begin(), tolower);
-	fullPath = base + newPath;
-	if (folderExists(fullPath.c_str()))
-	{
-		return fullPath;
-	}
-
-	// If we got here nothing can help us
-	return "";
-}
-
-/**
- * Takes a filename and tries to find it in the game's Data folders,
- * accounting for the system's case-sensitivity and path style.
- * @param filename Original filename.
- * @return Correct filename or "" if it doesn't exist.
- */
-std::string getDataFile(const std::string &filename)
+std::string searchDataFile(const std::string &filename)
 {
 	// Correct folder separator
 	std::string name = filename;
@@ -394,8 +350,8 @@ std::string getDataFile(const std::string &filename)
 #endif
 
 	// Check current data path
-	std::string path = caseInsensitive(Options::getDataFolder(), name);
-	if (!path.empty())
+	std::string path = Options::getDataFolder() + name;
+	if (fileExists(path))
 	{
 		return path;
 	}
@@ -403,8 +359,8 @@ std::string getDataFile(const std::string &filename)
 	// Check every other path
 	for (std::vector<std::string>::const_iterator i = Options::getDataList().begin(); i != Options::getDataList().end(); ++i)
 	{
-		std::string path = caseInsensitive(*i, name);
-		if (!path.empty())
+		path = *i + name;
+		if (fileExists(path))
 		{
 			Options::setDataFolder(*i);
 			return path;
@@ -415,13 +371,7 @@ std::string getDataFile(const std::string &filename)
 	return filename;
 }
 
-/**
- * Takes a foldername and tries to find it in the game's Data folders,
- * accounting for the system's case-sensitivity and path style.
- * @param foldername Original foldername.
- * @return Correct foldername or "" if it doesn't exist.
- */
-std::string getDataFolder(const std::string &foldername)
+std::string searchDataFolder(const std::string &foldername)
 {
 	// Correct folder separator
 	std::string name = foldername;
@@ -430,8 +380,8 @@ std::string getDataFolder(const std::string &foldername)
 #endif
 
 	// Check current data path
-	std::string path = caseInsensitiveFolder(Options::getDataFolder(), name);
-	if (!path.empty())
+	std::string path = Options::getDataFolder() + name;
+	if (folderExists(path))
 	{
 		return path;
 	}
@@ -439,8 +389,8 @@ std::string getDataFolder(const std::string &foldername)
 	// Check every other path
 	for (std::vector<std::string>::const_iterator i = Options::getDataList().begin(); i != Options::getDataList().end(); ++i)
 	{
-		std::string path = caseInsensitiveFolder(*i, name);
-		if (!path.empty())
+		path = *i + name;
+		if (folderExists(path))
 		{
 			Options::setDataFolder(*i);
 			return path;
@@ -546,52 +496,6 @@ std::vector<std::string> getFolderContents(const std::string &path, const std::s
 }
 
 /**
- * Gets the name of all the files
- * contained in a Data subfolder.
- * Repeated files are ignored.
- * @param folder Path to the data folder.
- * @param ext Extension of files ("" if it doesn't matter).
- * @return Ordered list of all the files.
- */
-std::vector<std::string> getDataContents(const std::string &folder, const std::string &ext)
-{
-	std::set<std::string> unique;
-	std::vector<std::string> files;
-
-	// Check current data path
-	std::string current = caseInsensitiveFolder(Options::getDataFolder(), folder);
-	if (!current.empty())
-	{
-		std::vector<std::string> contents = getFolderContents(current, ext);
-		for (std::vector<std::string>::const_iterator file = contents.begin(); file != contents.end(); ++file)
-		{
-			unique.insert(*file);
-		}
-	}
-
-	// Check every other path
-	for (std::vector<std::string>::const_iterator i = Options::getDataList().begin(); i != Options::getDataList().end(); ++i)
-	{
-		std::string path = caseInsensitiveFolder(*i, folder);
-		if (path == current)
-		{
-			continue;
-		}
-		if (!path.empty())
-		{
-			std::vector<std::string> contents = getFolderContents(path, ext);
-			for (std::vector<std::string>::const_iterator file = contents.begin(); file != contents.end(); ++file)
-			{
-				unique.insert(*file);
-			}
-		}
-	}
-
-	files = std::vector<std::string>(unique.begin(), unique.end());
-	return files;
-}
-
-/**
  * Checks if a certain path exists and is a folder.
  * @param path Full path to folder.
  * @return Does it exist?
@@ -651,27 +555,27 @@ bool deleteFile(const std::string &path)
 #endif
 }
 
-/**
- * Gets the base filename of a path.
- * @param path Full path to file.
- * @param transform Optional function to transform the filename.
- * @return Base filename.
- */
-std::string baseFilename(const std::string &path, int (*transform)(int))
+std::string baseFilename(const std::string &path)
 {
-	size_t sep = path.find_last_of(PATH_SEPARATOR);
+	size_t sep = path.find_last_of(
+#ifdef _WIN32
+		"/\\"
+#else
+		"/"
+#endif
+		);
 	std::string filename;
 	if (sep == std::string::npos)
 	{
 		filename = path;
 	}
+	else if (sep == path.size() - 1)
+	{
+		return baseFilename(path.substr(0, path.size() - 1));
+	}
 	else
 	{
-		filename = path.substr(0, sep + 1);
-	}
-	if (transform != 0)
-	{
-		std::transform(filename.begin(), filename.end(), filename.begin(), transform);
+		filename = path.substr(sep + 1);
 	}
 	return filename;
 }
@@ -700,11 +604,6 @@ std::string sanitizeFilename(const std::string &filename)
 	return newFilename;
 }
 
-/**
- * Removes the extension from a filename.
- * @param filename Original filename.
- * @return Filename without the extension.
- */
 std::string noExt(const std::string &filename)
 {
 	size_t dot = filename.find_last_of('.');
@@ -712,7 +611,7 @@ std::string noExt(const std::string &filename)
 	{
 		return filename;
 	}
-	return filename.substr(0, filename.find_last_of('.'));
+	return filename.substr(0, dot);
 }
 
 /**
@@ -737,7 +636,15 @@ std::string getLocale()
 	return Language::wstrToUtf8(locale);
 	*/
 #else
-	std::locale l("");
+	std::locale l;
+	try
+	{
+		l = std::locale("");
+	}
+	catch (std::runtime_error)
+	{
+		return "x-";
+	}
 	std::string name = l.name();
 	size_t dash = name.find_first_of('_'), dot = name.find_first_of('.');
 	if (dot != std::string::npos)
@@ -873,7 +780,24 @@ bool moveFile(const std::string &src, const std::string &dest)
 #ifdef _WIN32
 	return (MoveFileExA(src.c_str(), dest.c_str(), MOVEFILE_REPLACE_EXISTING) != 0);
 #else
-	return (rename(src.c_str(), dest.c_str()) == 0);
+	//return (rename(src.c_str(), dest.c_str()) == 0);
+	std::ifstream srcStream;
+	std::ofstream destStream;
+	srcStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	destStream.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+	try
+	{
+		srcStream.open(src.c_str(), std::ios::binary);
+		destStream.open(dest.c_str(), std::ios::binary);
+		destStream << srcStream.rdbuf();
+		srcStream.close();
+		destStream.close();
+	}
+	catch (std::fstream::failure)
+	{
+		return false;
+	}
+	return deleteFile(src);
 #endif
 }
 
@@ -939,6 +863,13 @@ std::string getDosPath()
 #endif
 }
 
+/**
+ * Sets the window titlebar icon.
+ * For Windows, use the embedded resource icon.
+ * For other systems, use a PNG icon.
+ * @param winResource ID for Windows icon.
+ * @param unixPath Path to PNG icon for Unix.
+ */
 void setWindowIcon(int winResource, const std::string &unixPath)
 {
 #ifdef _WIN32
@@ -955,7 +886,7 @@ void setWindowIcon(int winResource, const std::string &unixPath)
 #else
 	// SDL only takes UTF-8 filenames
 	// so here's an ugly hack to match this ugly reasoning
-	std::string utf8 = Language::wstrToUtf8(Language::fsToWstr(CrossPlatform::getDataFile(unixPath)));
+	std::string utf8 = Language::wstrToUtf8(Language::fsToWstr(unixPath));
 	SDL_Surface *icon = IMG_Load(utf8.c_str());
 	if (icon != 0)
 	{
@@ -963,6 +894,203 @@ void setWindowIcon(int winResource, const std::string &unixPath)
 		SDL_FreeSurface(icon);
 	}
 #endif
+}
+
+/**
+ * Logs the stack back trace leading up to this function call.
+ * @param ex Pointer to stack context (PCONTEXT on Windows), NULL to use current context.
+ */
+void stackTrace(void *ctx)
+{
+#ifdef _WIN32
+	const int MAX_SYMBOL_LENGTH = 1024;
+	CONTEXT context;
+	if (ctx != 0)
+	{
+		context = *((PCONTEXT)ctx);
+	}
+	else
+	{
+		// TODO: Doesn't work on MinGW
+#if 0
+		memset(&context, 0, sizeof(CONTEXT));
+		context.ContextFlags = CONTEXT_FULL;
+		RtlCaptureContext(&context);
+#endif
+		return;
+	}
+	HANDLE thread = GetCurrentThread();
+	HANDLE process = GetCurrentProcess();
+	STACKFRAME64 frame;
+	memset(&frame, 0, sizeof(STACKFRAME64));
+	DWORD image;
+#ifdef _M_IX86
+	image = IMAGE_FILE_MACHINE_I386;
+	frame.AddrPC.Offset = context.Eip;
+	frame.AddrPC.Mode = AddrModeFlat;
+	frame.AddrFrame.Offset = context.Ebp;
+	frame.AddrFrame.Mode = AddrModeFlat;
+	frame.AddrStack.Offset = context.Esp;
+	frame.AddrStack.Mode = AddrModeFlat;
+#elif _M_X64
+	image = IMAGE_FILE_MACHINE_AMD64;
+	frame.AddrPC.Offset = context.Rip;
+	frame.AddrPC.Mode = AddrModeFlat;
+	frame.AddrFrame.Offset = context.Rbp;
+	frame.AddrFrame.Mode = AddrModeFlat;
+	frame.AddrStack.Offset = context.Rsp;
+	frame.AddrStack.Mode = AddrModeFlat;
+#elif _M_IA64
+	image = IMAGE_FILE_MACHINE_IA64;
+	frame.AddrPC.Offset = context.StIIP;
+	frame.AddrPC.Mode = AddrModeFlat;
+	frame.AddrFrame.Offset = context.IntSp;
+	frame.AddrFrame.Mode = AddrModeFlat;
+	frame.AddrBStore.Offset = context.RsBSP;
+	frame.AddrBStore.Mode = AddrModeFlat;
+	frame.AddrStack.Offset = context.IntSp;
+	frame.AddrStack.Mode = AddrModeFlat;
+#else
+	#warning Stack trace not supported on this architecture
+	return;
+#endif
+	SYMBOL_INFO *symbol = (SYMBOL_INFO *)malloc(sizeof(SYMBOL_INFO) + (MAX_SYMBOL_LENGTH - 1) * sizeof(TCHAR));
+	symbol->MaxNameLen = MAX_SYMBOL_LENGTH;
+	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+	IMAGEHLP_LINE64 *line = (IMAGEHLP_LINE64 *)malloc(sizeof(IMAGEHLP_LINE64));
+	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+	DWORD displacement;
+	SymInitialize(process, NULL, TRUE);
+	while (StackWalk64(image, process, thread, &frame, &context, NULL, NULL, NULL, NULL))
+	{
+		if (SymFromAddr(process, frame.AddrPC.Offset, NULL, symbol))
+		{
+			if (SymGetLineFromAddr64(process, frame.AddrPC.Offset, &displacement, line))
+			{
+				std::string filename = line->FileName;
+				size_t n = filename.find_last_of(PATH_SEPARATOR);
+				if (n != std::string::npos)
+				{
+					filename = filename.substr(n + 1);
+				}
+				Log(LOG_FATAL) << "0x" << std::hex << symbol->Address << std::dec << " " << symbol->Name << " (" << filename << ":" << line->LineNumber << ")";
+			}
+			else
+			{
+				Log(LOG_FATAL) << "0x" << std::hex << symbol->Address << std::dec << " " << symbol->Name << " (SymGetLineFromAddr64 failed: " << GetLastError() << ")";
+			}
+		}
+		else
+		{
+			Log(LOG_FATAL) << "SymFromAddr failed: " << GetLastError();
+		}
+	}
+	DWORD err = GetLastError();
+	if (err)
+	{
+		Log(LOG_FATAL) << "StackWalk64 failed: " << err;
+	}
+	SymCleanup(process);
+#else
+	const int MAX_STACK_FRAMES = 16;
+	void *array[MAX_STACK_FRAMES];
+	size_t size = backtrace(array, MAX_STACK_FRAMES);
+	char **strings = backtrace_symbols(array, size);
+
+	for (size_t i = 0; i < size; ++i)
+	{
+		Log(LOG_FATAL) << strings[i];
+	}
+
+	free(strings);
+#endif
+}
+
+/**
+ * Generates a quick timestamp.
+ * @return String in D-M-Y_H_M_S format.
+ */
+std::string timestamp()
+{
+	const int MAX_LEN = 25, MAX_RESULT = 80;
+#ifdef _WIN32
+	char date[MAX_LEN], time[MAX_LEN];
+	if (GetDateFormatA(LOCALE_INVARIANT, 0, 0,
+		"dd'-'MM'-'yyyy", date, MAX_LEN) == 0)
+		return "Error in Now()";
+	if (GetTimeFormatA(LOCALE_INVARIANT, TIME_FORCE24HOURFORMAT, 0,
+		"HH'-'mm'-'ss", time, MAX_LEN) == 0)
+		return "Error in Now()";
+
+	char result[MAX_RESULT] = { 0 };
+	sprintf(result, "%s_%s", date, time);
+#else
+	char buffer[MAX_LEN];
+	time_t rawtime;
+	struct tm *timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	strftime(buffer, MAX_LEN, "%d-%m-%Y_%H-%M-%S", timeinfo);
+	char result[MAX_RESULT] = { 0 };
+	sprintf(result, "%s", buffer);
+#endif
+	return result;
+}
+
+/**
+ * Logs the details of this crash and shows an error.
+ * @param ex Pointer to exception data (PEXCEPTION_POINTERS on Windows, signal int on Unix)
+ * @param err Exception message, if any.
+ */
+void crashDump(void *ex, const std::string &err)
+{
+	std::ostringstream error;
+#ifdef _WIN32
+	PEXCEPTION_POINTERS exception = (PEXCEPTION_POINTERS)ex;
+	if (exception->ExceptionRecord->ExceptionCode == EXCEPTION_CODE_CXX)
+	{
+		std::exception *cppException = (std::exception *)exception->ExceptionRecord->ExceptionInformation[1];
+		error << cppException->what();
+	}
+	else
+	{
+		error << "code 0x" << std::hex << exception->ExceptionRecord->ExceptionCode;
+	}
+	Log(LOG_FATAL) << "A fatal error has occurred: " << error.str();
+	stackTrace(exception->ContextRecord);
+	std::string dumpName = Options::getUserFolder();
+	dumpName += timestamp() + ".dmp";
+	HANDLE dumpFile = CreateFileA(dumpName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	MINIDUMP_EXCEPTION_INFORMATION exceptionInformation;
+	exceptionInformation.ThreadId = GetCurrentThreadId();
+	exceptionInformation.ExceptionPointers = exception;
+	exceptionInformation.ClientPointers = FALSE;
+	if (MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, MiniDumpNormal, exception ? &exceptionInformation : NULL, NULL, NULL))
+	{
+		Log(LOG_FATAL) << "Crash dump generated at " << dumpName;
+	}
+	else
+	{
+		Log(LOG_FATAL) << "MiniDumpWriteDump failed: " << GetLastError();
+	}
+#else
+	if (ex == 0)
+	{
+		error << err;
+	}
+	else
+	{
+		int signal = *((int*)ex);
+		error << "signal " << signal;
+	}
+	Log(LOG_FATAL) << "A fatal error has occurred: " << error.str();
+	stackTrace(0);
+#endif
+	std::ostringstream msg;
+	msg << "OpenXcom has crashed: " << error.str() << std::endl;
+	msg << "Extra information has been saved to openxcom.log." << std::endl;
+	msg << "Please report this to the developers.";
+	showError(msg.str());
 }
 
 }

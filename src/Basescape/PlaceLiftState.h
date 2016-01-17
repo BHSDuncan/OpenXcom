@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_PLACELIFTSTATE_H
-#define OPENXCOM_PLACELIFTSTATE_H
-
 #include "../Engine/State.h"
 
 namespace OpenXcom
@@ -28,6 +26,7 @@ class Base;
 class BaseView;
 class Text;
 class Globe;
+class RuleBaseFacility;
 
 /**
  * Screen shown when the player has to
@@ -41,6 +40,7 @@ private:
 	BaseView *_view;
 	Text *_txtTitle;
 	bool _first;
+	RuleBaseFacility *_lift;
 public:
 	/// Creates the Place Lift state.
 	PlaceLiftState(Base *base, Globe *globe, bool first);
@@ -51,5 +51,3 @@ public:
 };
 
 }
-
-#endif

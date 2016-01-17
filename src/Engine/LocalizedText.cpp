@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -25,7 +25,7 @@ namespace OpenXcom
 /**
  * Replace the next argument placeholder with @a val.
  * @param val The value to place in the next placeholder's position.
- * @return A translated string with all occurences of the marker replaced by @a val.
+ * @return A translated string with all occurrences of the marker replaced by @a val.
  */
 LocalizedText LocalizedText::arg(const std::wstring &val) const
 {
@@ -46,7 +46,7 @@ LocalizedText LocalizedText::arg(const std::wstring &val) const
 /**
  * Replace the next argument placeholder with @a val.
  * @param val The value to place in the next placeholder's position.
- * @return The translated string with all occurences of the marker replaced by @a val.
+ * @return The translated string with all occurrences of the marker replaced by @a val.
  */
 LocalizedText &LocalizedText::arg(const std::wstring &val)
 {
@@ -63,6 +63,16 @@ LocalizedText &LocalizedText::arg(const std::wstring &val)
 		++_nextArg;
 	}
 	return *this;
+}
+
+LocalizedText LocalizedText::arg(const std::string &val) const
+{
+	return arg(Language::utf8ToWstr(val));
+}
+
+LocalizedText &LocalizedText::arg(const std::string &val)
+{
+	return arg(Language::utf8ToWstr(val));
 }
 
 /**

@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_TARGET_H
-#define OPENXCOM_TARGET_H
-
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -36,6 +34,7 @@ class Target
 {
 protected:
 	double _lon, _lat;
+	int _depth;
 	std::vector<Target*> _followers;
 	/// Creates a target.
 	Target();
@@ -43,7 +42,7 @@ public:
 	/// Cleans up the target.
 	virtual ~Target();
 	/// Loads the moving target from YAML.
-	void load(const YAML::Node& node);
+	virtual void load(const YAML::Node& node);
 	/// Saves the target to YAML.
 	virtual YAML::Node save() const;
 	/// Saves the target's ID to YAML.
@@ -64,8 +63,10 @@ public:
 	std::vector<Target*> *getFollowers();
 	/// Gets the distance to another target.
 	double getDistance(const Target *target) const;
+	/// Gets the depth of the target.
+	int getSiteDepth();
+	/// Sets the depth of the target.
+	void setSiteDepth(int depth);
 };
 
 }
-
-#endif

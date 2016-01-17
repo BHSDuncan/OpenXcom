@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_RNG_H
-#define OPENXCOM_RNG_H
-
 #include <algorithm>
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
@@ -41,6 +39,8 @@ namespace RNG
 	int generate(int min, int max);
 	/// Generates a random floating-point number.
 	double generate(double min, double max);
+	/// Generates a random integer number, inclusive (non-seed version).
+	int seedless(int min, int max);
 	/// Get normally distributed value.
 	double boxMuller(double m = 0, double s = 1);
 	/// Generates a percentage chance.
@@ -60,5 +60,3 @@ namespace RNG
 }
 
 }
-
-#endif

@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_TEXT_H
-#define OPENXCOM_TEXT_H
-
 #include "../Engine/Surface.h"
 #include <vector>
 #include <string>
@@ -98,6 +96,8 @@ public:
 	void setSecondaryColor(Uint8 color);
 	/// Gets the text's secondary color.
 	Uint8 getSecondaryColor() const;
+	/// Gets the number of lines in the (wrapped, if wrapping is enabled) text
+	int getNumLines() const;
 	/// Gets the rendered text's width.
 	int getTextWidth(int line = -1) const;
 	/// Gets the rendered text's height.
@@ -107,5 +107,3 @@ public:
 };
 
 }
-
-#endif

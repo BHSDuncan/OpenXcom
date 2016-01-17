@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_TEXTLIST_H
-#define OPENXCOM_TEXTLIST_H
-
 #include <vector>
 #include <map>
 #include "../Engine/InteractiveSurface.h"
@@ -49,7 +47,7 @@ private:
 	size_t _scroll, _visibleRows, _selRow;
 	Uint8 _color, _color2;
 	std::map<int, TextHAlign> _align;
-	bool _dot, _selectable, _condensed, _contrast, _wrap;
+	bool _dot, _selectable, _condensed, _contrast, _wrap, _flooding;
 	Surface *_bg, *_selector;
 	ArrowButton *_up, *_down;
 	ScrollBar *_scrollbar;
@@ -93,6 +91,10 @@ public:
 	int getColumnX(size_t column) const;
 	/// Gets the Y position of a certain row.
 	int getRowY(size_t row) const;
+	/// Gets the height of the row text in pixels
+	int getTextHeight(size_t row) const;
+	/// Gets the number of lines in the wrapped text for the specified row
+	int getNumTextLines(size_t row) const;
 	/// Gets the amount of text in the list.
 	size_t getTexts() const;
 	/// Gets the amount of rows in the list.
@@ -191,8 +193,10 @@ public:
 	void setComboBox(ComboBox *comboBox);
 	/// Check for a combobox.
 	ComboBox *getComboBox() const;
+	void setBorderColor(Uint8 color);
+	int getScrollbarColor();
+    /// Allows the cell to flood into other columns.
+    void setFlooding(bool flooding);
 };
 
 }
-
-#endif

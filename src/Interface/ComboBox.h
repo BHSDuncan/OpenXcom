@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_COMBOBOX_H
-#define OPENXCOM_COMBOBOX_H
-
 #include "../Engine/InteractiveSurface.h"
 #include <vector>
 #include <string>
@@ -83,6 +81,9 @@ public:
 	void setArrowColor(Uint8 color);
 	/// Gets the selected option in the list.
 	size_t getSelected() const;
+	/// Gets the item that is currently hovered over in the popup list, or the current
+	/// selected item if no item is hovered over.
+	size_t getHoveredListIdx() const;
 	/// Sets the selected option in the list.
 	void setSelected(size_t sel);
 	/// Sets the list of options.
@@ -99,8 +100,12 @@ public:
 	void toggle(bool first = false);
 	/// Hooks an action handler to when the slider changes.
 	void onChange(ActionHandler handler);
+	/// Hooks an action handler to moving the mouse in to the listbox when it is visible.
+	void onListMouseIn(ActionHandler handler);
+	/// Hooks an action handler to moving the mouse out of the listbox when it is visible.
+	void onListMouseOut(ActionHandler handler);
+	/// Hooks an action handler to moving the mouse over the listbox when it is visible.
+	void onListMouseOver(ActionHandler handler);
 };
 
 }
-
-#endif

@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_MANAGEALIENCONTAINMENTSTATE_H
-#define OPENXCOM_MANAGEALIENCONTAINMENTSTATE_H
-
 #include "../Engine/State.h"
 #include "../Menu/OptionsBaseState.h"
 #include <vector>
@@ -45,15 +43,13 @@ private:
 	OptionsOrigin _origin;
 	TextButton *_btnOk, *_btnCancel;
 	Window *_window;
-	Text *_txtTitle, *_txtUsed, *_txtAvailable, *_txtItem, *_txtLiveAliens, *_txtDeadAliens;
+	Text *_txtTitle, *_txtUsed, *_txtAvailable, *_txtItem, *_txtLiveAliens, *_txtDeadAliens, *_txtInterrogatedAliens;
 	TextList *_lstAliens;
 	Timer *_timerInc, *_timerDec;
 	std::vector<int> _qtys;
 	std::vector<std::string> _aliens;
 	size_t _sel;
-	int _aliensSold, _researchedAliens;
-	bool _overCrowded;
-	Uint8 _color, _color2;
+	int _aliensSold;
 	/// Gets selected quantity.
 	int getQuantity();
 public:
@@ -94,5 +90,3 @@ public:
 };
 
 }
-
-#endif

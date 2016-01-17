@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,20 +20,12 @@
 #include "ScannerView.h"
 #include "../Engine/InteractiveSurface.h"
 #include "../Engine/Game.h"
-#include "../Engine/Language.h"
-#include "../Engine/CrossPlatform.h"
 #include "../Engine/Action.h"
-#include "../Engine/Palette.h"
 #include "../Engine/Timer.h"
 #include "../Engine/Screen.h"
 #include "../Engine/Options.h"
-#include "../Interface/Text.h"
-#include "../Savegame/BattleItem.h"
 #include "../Savegame/BattleUnit.h"
-#include "../Ruleset/RuleItem.h"
-#include "../Resource/ResourcePack.h"
-#include <iostream>
-#include <sstream>
+#include "../Mod/Mod.h"
 #include "../Savegame/SavedGame.h"
 #include "../Savegame/SavedBattleGame.h"
 
@@ -71,8 +63,8 @@ ScannerState::ScannerState (BattleAction *action) : _action(action)
 
 	centerAllSurfaces();
 
-	_game->getResourcePack()->getSurface("DETBORD.PCK")->blit(_bg);
-	_game->getResourcePack()->getSurface("DETBORD2.PCK")->blit(_scan);
+	_game->getMod()->getSurface("DETBORD.PCK")->blit(_bg);
+	_game->getMod()->getSurface("DETBORD2.PCK")->blit(_scan);
 	_bg->onMouseClick((ActionHandler)&ScannerState::exitClick);
 	_bg->onKeyboardPress((ActionHandler)&ScannerState::exitClick, Options::keyCancel);
 
@@ -111,7 +103,7 @@ void ScannerState::update()
 
 /**
  * Animation handler. Updates the minimap view animation.
-*/
+ */
 void ScannerState::animate()
 {
 	_scannerView->animate();
@@ -119,7 +111,7 @@ void ScannerState::animate()
 
 /**
  * Handles timers.
-*/
+ */
 void ScannerState::think()
 {
 	State::think();

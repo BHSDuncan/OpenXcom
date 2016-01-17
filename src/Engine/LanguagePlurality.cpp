@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -81,7 +81,7 @@ const char *NoSingular::getSuffix(unsigned) const
 }
 
 /**
- * Plurality rules for Cyrillic languages (Russian, Ukranian, etc.)
+ * Plurality rules for Cyrillic languages (Russian, Ukrainian, etc.)
  * @note one = 1, 21, 31...; few = 2-4, 22-24, 32-34...; many = 0, 5-20, 25-30, 35-40...; other = ...
  */
 class CyrillicPlurality : public LanguagePlurality

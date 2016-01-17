@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,12 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_EXPLOSIONBSTATE_H
-#define OPENXCOM_EXPLOSIONBSTATE_H
-
 #include "BattleState.h"
 #include "Position.h"
-#include <string>
 
 namespace OpenXcom
 {
@@ -43,12 +40,12 @@ private:
 	BattleItem *_item;
 	Tile *_tile;
 	int _power;
-	bool _areaOfEffect, _lowerWeapon, _pistolWhip, _hit;
+	bool _areaOfEffect, _lowerWeapon, _cosmetic;
 	/// Calculates the effects of the explosion.
 	void explode();
 public:
 	/// Creates a new ExplosionBState class.
-	ExplosionBState(BattlescapeGame *parent, Position center, BattleItem *item, BattleUnit *unit, Tile *tile = 0, bool lowerWeapon = false);
+	ExplosionBState(BattlescapeGame *parent, Position center, BattleItem *item, BattleUnit *unit, Tile *tile = 0, bool lowerWeapon = false, bool cosmetic = false);
 	/// Cleans up the ExplosionBState.
 	~ExplosionBState();
 	/// Initializes the state.
@@ -57,11 +54,7 @@ public:
 	void cancel();
 	/// Runs state functionality every cycle.
 	void think();
-	/// Gets the result of the state.
-	std::string getResult() const;
 
 };
 
 }
-
-#endif

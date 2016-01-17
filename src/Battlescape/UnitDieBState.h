@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,11 +17,8 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_UNITDIEBSTATE_H
-#define OPENXCOM_UNITDIEBSTATE_H
-
 #include "BattleState.h"
-#include "../Ruleset/RuleItem.h"
+#include "../Mod/RuleItem.h"
 
 namespace OpenXcom
 {
@@ -38,7 +36,7 @@ private:
 	BattleUnit *_unit;
 	ItemDamageType _damageType;
 	bool _noSound;
-	int _originalDir;
+	int _extraFrame;
 public:
 	/// Creates a new UnitDieBState class
 	UnitDieBState(BattlescapeGame *parent, BattleUnit *unit, ItemDamageType damageType, bool noSound);
@@ -50,8 +48,6 @@ public:
 	void cancel();
 	/// Runs state functionality every cycle.
 	void think();
-	/// Gets the result of the state.
-	std::string getResult() const;
 	/// Converts a unit to a corpse.
 	void convertUnitToCorpse();
 	/// Plays the death sound.
@@ -59,5 +55,3 @@ public:
 };
 
 }
-
-#endif

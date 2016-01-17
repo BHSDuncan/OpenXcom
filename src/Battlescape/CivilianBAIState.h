@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_CIVILIANBAISTATE_H
-#define OPENXCOM_CIVILIANBAISTATE_H
-
 #include "BattleAIState.h"
 #include "Position.h"
 #include <yaml-cpp/yaml.h>
@@ -32,7 +30,7 @@ class Node;
 struct BattleAction;
 
 /**
- * This is the intial AI state of units, walking around and looking for intruders.
+ * This is the initial AI state of units, walking around and looking for intruders.
  */
 class CivilianBAIState : public BattleAIState
 {
@@ -66,5 +64,3 @@ public:
 };
 
 }
-
-#endif

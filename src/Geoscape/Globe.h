@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_GLOBE_H
-#define OPENXCOM_GLOBE_H
-
 #include <vector>
 #include <list>
 #include "../Engine/InteractiveSurface.h"
@@ -48,8 +46,8 @@ private:
 	static const int NUM_LANDSHADES = 48;
 	static const int NUM_SEASHADES = 72;
 	static const int NEAR_RADIUS = 25;
-	static const int DOGFIGHT_ZOOM = 3;
-	static const int CITY_MARKER = 8;
+	static const size_t DOGFIGHT_ZOOM = 3;
+	static const size_t CITY_MARKER = 8;
 	static const double ROTATE_LONGITUDE;
 	static const double ROTATE_LATITUDE;
 
@@ -86,8 +84,8 @@ private:
 	bool pointBack(double lon, double lat) const;
 	/// Return latitude of last visible to player point on given longitude.
 	double lastVisibleLat(double lon) const;
-	/// Checks if a point is inside a polygon.
-	bool insidePolygon(double lon, double lat, Polygon *poly) const;
+	/// Get polygon pointer
+	Polygon* getPolygonFromLonLat(double lon, double lat) const;
 	/// Checks if a target is near a point.
 	bool targetNear(Target* target, int x, int y) const;
 	/// Caches a set of polygons.
@@ -103,10 +101,14 @@ private:
 	/// Draw flight path.
 	void drawPath(Surface *surface, double lon1, double lat1, double lon2, double lat2);
 	/// Draw target marker.
-	void drawTarget(Target *target);
+	void drawTarget(Target *target, Surface *surface);
 public:
-	static Uint8 oceanColor1;
-	static Uint8 oceanColor2;
+
+	static Uint8 COUNTRY_LABEL_COLOR;
+	static Uint8 LINE_COLOR;
+	static Uint8 CITY_LABEL_COLOR;
+	static Uint8 BASE_LABEL_COLOR;
+	static Uint8 OCEAN_COLOR;
 	/// Creates a new globe at the specified position and size.
 	Globe(Game* game, int cenX, int cenY, int width, int height, int x = 0, int y = 0);
 	/// Cleans up the globe.
@@ -117,8 +119,6 @@ public:
 	void polarToCart(double lon, double lat, double *x, double *y) const;
 	/// Converts cartesian coordinates to polar coordinates.
 	void cartToPolar(Sint16 x, Sint16 y, double *lon, double *lat) const;
-	/// Sets the texture set for the globe's polygons.
-	void setTexture(SurfaceSet *texture);
 	/// Starts rotating the globe left.
 	void rotateLeft();
 	/// Starts rotating the globe right.
@@ -197,10 +197,6 @@ public:
 	void keyboardPress(Action *action, State *state);
 	/// Get the polygons texture and shade at the given point.
 	void getPolygonTextureAndShade(double lon, double lat, int *texture, int *shade) const;
-	/// Get the localized text.
-	const LocalizedText &tr(const std::string &id) const;
-	/// Get the localized text.
-	LocalizedText tr(const std::string &id, unsigned n) const;
 	/// Sets hover base position.
 	void setNewBaseHoverPos(double lon, double lat);
 	/// Turns on new base hover mode.
@@ -209,8 +205,6 @@ public:
 	void unsetNewBaseHover(void);
 	/// Gets state of base hover mode
 	bool getNewBaseHover(void);
-	/// Gets _detail variable
-	bool getShowRadar(void);
 	/// set the _radarLines variable
 	void toggleRadarLines();
 	/// Update the resolution settings, we just resized the window.
@@ -222,5 +216,3 @@ public:
 };
 
 }
-
-#endif

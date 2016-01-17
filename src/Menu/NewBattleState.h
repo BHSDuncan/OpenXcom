@@ -1,5 +1,6 @@
+#pragma once
 /*
- * Copyright 2010-2014 OpenXcom Developers.
+ * Copyright 2010-2016 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,9 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPENXCOM_NEWBATTLESTATE_H
-#define OPENXCOM_NEWBATTLESTATE_H
-
 #include "../Engine/State.h"
 #include <vector>
 #include <string>
@@ -50,7 +48,6 @@ private:
 	Slider *_slrDarkness, *_slrAlienTech, *_slrDepth;
 	TextButton *_btnOk, *_btnCancel, *_btnEquip, *_btnRandom;
 	std::vector<std::string> _missionTypes, _terrainTypes, _alienRaces, _crafts;
-	std::vector<int> _textures;
 	Craft *_craft;
 public:
 	/// Creates the New Battle state.
@@ -82,5 +79,3 @@ public:
 };
 
 }
-
-#endif
