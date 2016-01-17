@@ -66,6 +66,7 @@ _ReSharper.*/
 bin/UFO/GEODATA
 bin/UFO/GEOGRAPH
 bin/UFO/MAPS
+bin/UFO/MISSDAT
 bin/UFO/ROUTES
 bin/UFO/SOUND
 bin/UFO/TERRAIN
