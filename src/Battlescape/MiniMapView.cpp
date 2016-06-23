@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <cmath>
+#include <algorithm>
 #include "../fmath.h"
 #include "MiniMapView.h"
 #include "MiniMapState.h"
@@ -406,4 +406,5 @@ void MiniMapView::stopScrolling(Action *action)
 	// reset our "mouse position stored" flag
 	_cursorPosition.z = 0;
 }
+
 }

@@ -16,10 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define _USE_MATH_DEFINES
 #include "MonthlyReportState.h"
 #include <sstream>
-#include <cmath>
 #include "../Engine/Game.h"
 #include "../Mod/Mod.h"
 #include "../Engine/LocalizedText.h"
@@ -40,6 +38,7 @@
 #include "../Savegame/SoldierDiary.h"
 #include "../Menu/SaveGameState.h"
 #include "../Mod/RuleInterface.h"
+#include "../fmath.h"
 
 namespace OpenXcom
 {
@@ -219,7 +218,9 @@ MonthlyReportState::MonthlyReportState(bool psi, Globe *globe) : _psi(psi), _gam
 		}
 	}
 	if (resetWarning && _game->getSavedGame()->getWarned())
+	{
 		_game->getSavedGame()->setWarned(false);
+	}
 
 	ss5 << countryList(_happyList, "STR_COUNTRY_IS_PARTICULARLY_PLEASED", "STR_COUNTRIES_ARE_PARTICULARLY_HAPPY");
 	ss5 << countryList(_sadList, "STR_COUNTRY_IS_UNHAPPY_WITH_YOUR_ABILITY", "STR_COUNTRIES_ARE_UNHAPPY_WITH_YOUR_ABILITY");
@@ -233,6 +234,18 @@ MonthlyReportState::MonthlyReportState(bool psi, Globe *globe) : _psi(psi), _gam
  */
 MonthlyReportState::~MonthlyReportState()
 {
+}
+
+/**
+ * Make sure the game is over.
+ */
+void MonthlyReportState::init()
+{
+	State::init();
+	if (_gameOver)
+	{
+		_game->getSavedGame()->setEnding(END_LOSE);
+	}
 }
 
 /**
@@ -254,7 +267,7 @@ void MonthlyReportState::btnOkClick(Action *)
 				Soldier *soldier = _game->getSavedGame()->getSoldier((*s)->getId());
 				// Award medals to eligible soldiers
 				soldier->getDiary()->addMonthlyService();
-				if (soldier->getDiary()->manageCommendations(_game->getMod()))
+				if (soldier->getDiary()->manageCommendations(_game->getMod(), _game->getSavedGame()->getMissionStatistics()))
 				{
 					_soldiersMedalled.push_back(soldier);
 				}
@@ -282,7 +295,11 @@ void MonthlyReportState::btnOkClick(Action *)
 	{
 		if (_txtFailure->getVisible())
 		{
-			_game->pushState(new CutsceneState("loseGame"));
+			_game->pushState(new CutsceneState(CutsceneState::LOSE_GAME));
+			if (_game->getSavedGame()->isIronman())
+			{
+				_game->pushState(new SaveGameState(OPT_GEOSCAPE, SAVE_IRONMAN, _palette));
+			}
 		}
 		else
 		{
@@ -406,4 +423,5 @@ std::wstring MonthlyReportState::countryList(const std::vector<std::string> &cou
 	}
 	return ss.str();
 }
+
 }

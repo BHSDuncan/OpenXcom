@@ -17,6 +17,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "ManufactureInfoState.h"
+#include <algorithm>
 #include "../Interface/Window.h"
 #include "../Interface/TextButton.h"
 #include "../Interface/ToggleTextButton.h"
@@ -35,7 +36,7 @@
 #include "../Engine/Timer.h"
 #include "../Menu/ErrorMessageState.h"
 #include "../Mod/RuleInterface.h"
-#include <limits>
+#include <climits>
 
 namespace OpenXcom
 {
@@ -282,7 +283,7 @@ void ManufactureInfoState::btnOkClick(Action *)
 {
 	if (_item)
 	{
-		_production->startItem(_base, _game->getSavedGame());
+		_production->startItem(_base, _game->getSavedGame(), _game->getMod());
 	}
 	_production->setSellItems(_btnSell->getPressed());
 	exitState();
@@ -300,35 +301,6 @@ void ManufactureInfoState::exitState()
 	}
 }
 
-static void _formatProfit (int profit, std::wostringstream &outStream)
-{
-	bool profitIsNeg = false;
-	if (0 > profit)
-	{
-		profit = -profit;
-		profitIsNeg = true;
-	}
-
-	std::wstring suffix = L"";
-	if (1000000000 <= profit)
-	{
-		profit /= 1000000000;
-		suffix = L"B";
-	}
-	else if (1000000 <= profit)
-	{
-		profit /= 1000000;
-		suffix = L"M";
-	}
-	else if (1000 <= profit)
-	{
-		profit /= 1000;
-		suffix = L"K";
-	}
-
-	outStream << (profitIsNeg ? L"-" : L"+") << L"$" << profit << suffix;
-}
-
 /**
  * Updates display of assigned/available engineer/workshop space.
  */
@@ -344,9 +316,7 @@ void ManufactureInfoState::setAssignedEngineer()
 	if (_production->getInfiniteAmount()) s4 << Language::utf8ToWstr("∞");
 	else s4 << _production->getAmountTotal();
 	_txtTodo->setText(s4.str());
-	std::wostringstream s6;
-	_formatProfit(getMonthlyNetFunds(), s6);
-	_txtMonthlyProfit->setText(tr("STR_NET_FUNDS_PER_MONTH_UC").arg(s6.str()));
+	_txtMonthlyProfit->setText(tr("STR_MONTHLY_PROFIT").arg(Text::formatFunding(getMonthlyNetFunds()).c_str()));
 }
 
 /**
@@ -395,7 +365,7 @@ void ManufactureInfoState::moreEngineerRelease(Action *action)
  */
 void ManufactureInfoState::moreEngineerClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) moreEngineer(std::numeric_limits<int>::max());
+	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) moreEngineer(INT_MAX);
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) moreEngineer(1);
 }
 
@@ -444,7 +414,7 @@ void ManufactureInfoState::lessEngineerRelease(Action *action)
  */
 void ManufactureInfoState::lessEngineerClick(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) lessEngineer(std::numeric_limits<int>::max());
+	if (action->getDetails()->button.button == SDL_BUTTON_RIGHT) lessEngineer(INT_MAX);
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT) lessEngineer(1);
 }
 
@@ -463,7 +433,7 @@ void ManufactureInfoState::moreUnit(int change)
 	else
 	{
 		int units = _production->getAmountTotal();
-		change = std::min(std::numeric_limits<int>::max()-units, change);
+		change = std::min(INT_MAX - units, change);
 		if (_production->getRules()->getCategory() == "STR_CRAFT")
 			change = std::min(_base->getAvailableHangars() - _base->getUsedHangars(), change);
 		_production->setAmountTotal(units+change);
@@ -477,7 +447,7 @@ void ManufactureInfoState::moreUnit(int change)
  */
 void ManufactureInfoState::moreUnitPress(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && _production->getAmountTotal() < std::numeric_limits<int>::max())
+	if (action->getDetails()->button.button == SDL_BUTTON_LEFT && _production->getAmountTotal() < INT_MAX)
 		_timerMoreUnit->start();
 }
 
@@ -505,7 +475,7 @@ void ManufactureInfoState::moreUnitClick(Action *action)
 	{
 		if (_production->getRules()->getCategory() == "STR_CRAFT")
 		{
-			moreUnit(std::numeric_limits<int>::max());
+			moreUnit(INT_MAX);
 		}
 		else
 		{
@@ -641,4 +611,5 @@ void ManufactureInfoState::think()
 	_timerMoreUnit->think(this, 0);
 	_timerLessUnit->think(this, 0);
 }
+
 }

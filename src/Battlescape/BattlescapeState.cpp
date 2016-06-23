@@ -16,8 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define _USE_MATH_DEFINES
-#include <cmath>
+#include <algorithm>
 #include <sstream>
 #include <iomanip>
 #include <SDL_gfxPrimitives.h>
@@ -78,7 +77,7 @@ namespace OpenXcom
  * Initializes all the elements in the Battlescape screen.
  * @param game Pointer to the core game.
  */
-BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0)
+BattlescapeState::BattlescapeState() : _reserve(0), _firstInit(true), _isMouseScrolling(false), _isMouseScrolled(false), _xBeforeMouseScrolling(0), _yBeforeMouseScrolling(0), _totalMouseMoveX(0), _totalMouseMoveY(0), _mouseMovedOverThreshold(0), _mouseOverIcons(false), _autosave(false)
 {
 	std::fill_n(_visibleUnit, 10, (BattleUnit*)(0));
 
@@ -87,7 +86,6 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 	const int iconsWidth = _game->getMod()->getInterface("battlescape")->getElement("icons")->w;
 	const int iconsHeight = _game->getMod()->getInterface("battlescape")->getElement("icons")->h;
 	const int visibleMapHeight = screenHeight - iconsHeight;
-	_mouseOverIcons = false;
 	const int x = screenWidth/2 - iconsWidth/2;
 	const int y = screenHeight - iconsHeight;
 
@@ -472,9 +470,7 @@ BattlescapeState::BattlescapeState() : _reserve(0), _xBeforeMouseScrolling(0), _
 
 	_battleGame = new BattlescapeGame(_save, this);
 
-	_firstInit = true;
-	_isMouseScrolling = false;
-	_isMouseScrolled = false;
+	_barHealthColor = _barHealth->getColor();
 }
 
 
@@ -500,7 +496,6 @@ void BattlescapeState::init()
 	}
 
 	State::init();
-	_barHealthColor = _barHealth->getColor();
 	_animTimer->start();
 	_gameTimer->start();
 	_map->setFocus(true);
@@ -537,6 +532,18 @@ void BattlescapeState::init()
 	_txtTooltip->setText(L"");
 	_btnReserveKneel->toggle(_save->getKneelReserved());
 	_battleGame->setKneelReserved(_save->getKneelReserved());
+	if (_autosave)
+	{
+		_autosave = false;
+		if (_game->getSavedGame()->isIronman())
+		{
+			_game->pushState(new SaveGameState(OPT_BATTLESCAPE, SAVE_IRONMAN, _palette));
+		}
+		else if (Options::autosave)
+		{
+			_game->pushState(new SaveGameState(OPT_BATTLESCAPE, SAVE_AUTO_BATTLESCAPE, _palette));
+		}
+	}
 }
 
 /**
@@ -1399,7 +1406,7 @@ void BattlescapeState::blinkHealthBar()
 {
 	static Uint8 color = 0, maxcolor = 3, step = 0;
 
-	step ^= 1;	// 1, 0, 1, 0, ...
+	step = 1 - step;	// 1, 0, 1, 0, ...
 	BattleUnit *bu = _save->getSelectedUnit();
 	if (step == 0 || bu == 0 || !_barHealth->getVisible()) return;
 
@@ -1410,9 +1417,11 @@ void BattlescapeState::blinkHealthBar()
 		if (bu->getFatalWound(i) > 0)
 		{
 			_barHealth->setColor(_barHealthColor + color);
-			break;
+			return;
 		}
 	}
+	if (_barHealth->getColor() != _barHealthColor) // avoid redrawing if we don't have to
+		_barHealth->setColor(_barHealthColor);
 }
 
 /**
@@ -1559,7 +1568,7 @@ inline void BattlescapeState::handle(Action *action)
 					// "ctrl-j" - stun all aliens
 					else if (_save->getDebugMode() && action->getDetails()->key.keysym.sym == SDLK_j && (SDL_GetModState() & KMOD_CTRL) != 0)
 					{
-						debug(L"Deploying Celine Dione album");
+						debug(L"Deploying Celine Dion album");
 						for (std::vector<BattleUnit*>::iterator i = _save->getUnits()->begin(); i !=_save->getUnits()->end(); ++i)
 						{
 							if ((*i)->getOriginalFaction() == FACTION_HOSTILE && !(*i)->isOut())
@@ -1743,14 +1752,14 @@ void BattlescapeState::saveVoxelView()
 
 	double ang_x,ang_y;
 	bool black;
-	Tile *tile;
+	Tile *tile = 0;
 	std::ostringstream ss;
 	std::vector<unsigned char> image;
 	int test;
 	Position originVoxel = getBattleGame()->getTileEngine()->getSightOriginVoxel(bu);
 
 	Position targetVoxel,hitPos;
-	double dist;
+	double dist = 0;
 	bool _debug = _save->getDebugMode();
 	double dir = ((float)bu->getDirection()+4)/4*M_PI;
 	image.clear();
@@ -1994,6 +2003,21 @@ void BattlescapeState::finishBattle(bool abort, int inExitArea)
 			// pushed above will get popped without being shown.  otherwise
 			// it will get shown after the cutscene.
 			_game->pushState(new CutsceneState(cutscene));
+
+			if (cutscene == CutsceneState::WIN_GAME)
+			{
+				_game->getSavedGame()->setEnding(END_WIN);
+			}
+			else if (cutscene == CutsceneState::LOSE_GAME)
+			{
+				_game->getSavedGame()->setEnding(END_LOSE);
+			}
+			// Autosave if game is over
+			if (_game->getSavedGame()->getEnding() != END_NONE && _game->getSavedGame()->isIronman())
+			{
+				_game->getSavedGame()->setBattleGame(0);
+				_game->pushState(new SaveGameState(OPT_GEOSCAPE, SAVE_IRONMAN, _palette));
+			}
 		}
 	}
 }
@@ -2231,6 +2255,14 @@ void BattlescapeState::stopScrolling(Action *action)
 	}
 	// reset our "mouse position stored" flag
 	_cursorPosition.z = 0;
+}
+
+/**
+ * Autosave the game the next time the battlescape is displayed.
+ */
+void BattlescapeState::autosave()
+{
+	_autosave = true;
 }
 
 }
